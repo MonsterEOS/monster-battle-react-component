@@ -1,0 +1,44 @@
+{
+  "name": "monster-battle-react-component",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "files": [
+    "css",
+    "es",
+    "lib"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "nwb build-react-component",
+    "clean": "nwb clean-module && nwb clean-demo",
+    "prepublishOnly": "npm run build",
+    "start": "nwb serve-react-demo",
+    "test": "nwb test-react",
+    "test:coverage": "nwb test-react --coverage",
+    "test:watch": "nwb test-react --server"
+  },
+  "dependencies": {
+    "react-jss": "^8.6.1"
+  },
+  "peerDependencies": {
+    "react": "16.x",
+    "three": "^0.96.0"
+  },
+  "devDependencies": {
+    "file-loader": "^2.0.0",
+    "nwb": "0.23.x",
+    "react": "^16.5.0",
+    "react-dom": "^16.5.0",
+    "react-jss": "^8.6.1",
+    "three": "^0.96.0"
+  },
+  "author": "VertexStudio",
+  "homepage": "https://github.com/VertexStudio/monster-profile-react-component",
+  "license": "MIT",
+  "repository": "https://github.com/VertexStudio/monster-profile-react-component",
+  "keywords": [
+    "react-component"
+  ]
+}
