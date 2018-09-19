@@ -1,7 +1,7 @@
 import React, { Fragment, Component } from 'react'
 import { render } from 'react-dom'
 import myMonster from './assets/models/Devil.gltf'
-import enemyMonster from './assets/models/Bear.gltf'
+import enemyMonster from './assets/models/Rocky.gltf'
 import Arena3D from '../../src'
 
 class App extends Component {
@@ -16,7 +16,7 @@ class App extends Component {
         <Arena3D
           myMonster={myMonster}
           enemyMonster={enemyMonster}
-          size={{ height: "600px" }}
+          size={{ height: "800px" }}
           background={{ alpha: 1 }}
           zoom={true}
         />

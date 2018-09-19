@@ -10,15 +10,16 @@ class Arena3D extends Component {
     this.setMountNodeRef = element => {
       this.mount = element
     }
-    window.addEventListener(
-      "resize", this.onWindowsResize, false
-    )
     // used to calculate the delta between frames
     this.prevTime = 0
   }
 
   componentDidMount() {
     const { background, myMonster, exposure, ambientIntensity, ambientColor, directIntensity, directColor } = this.props
+
+    window.addEventListener(
+      "resize", this.onWindowsResize, false
+    )
 
     // default values
     const defaultBackground = { color: "#322e3a", alpha: 1 }
@@ -32,11 +33,11 @@ class Arena3D extends Component {
     this.scene = new THREE.Scene()
 
     // add camera
-    this.camera = new THREE.PerspectiveCamera(70, width / height, 0.25, 1000)
+    this.camera = new THREE.PerspectiveCamera(22, width / height, 0.25, 2000)
 
     // setting controls
     this.controls = new OrbitControls(this.camera, this.mount)
-    this.controls.target.set(0, 0, 0)
+    this.controls.target.set(35, 95, 375)
     this.controls.screenSpacePanning = true
     this.controls.enableZoom = true
     this.controls.update()
@@ -57,7 +58,7 @@ class Arena3D extends Component {
 
     // add point light
     const pointLightSphere = new THREE.SphereBufferGeometry(20, 16, 8)
-    this.pointLight = new THREE.PointLight(directColor, directIntensity, 1000)
+    this.pointLight = new THREE.PointLight(directColor, directIntensity, 4000)
     this.pointLight.add(new THREE.Mesh(
       pointLightSphere,
       new THREE.MeshBasicMaterial({ color: 0xffffff })
@@ -89,10 +90,6 @@ class Arena3D extends Component {
     this.mount.removeChild(this.renderer.domElement)
   }
 
-  shouldComponentUpdate(nextProps) {
-    return !(nextProps.action === this.props.action)
-  }
-
   start = () => {
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate)
@@ -110,7 +107,6 @@ class Arena3D extends Component {
   animate = (time) => {
     this.frameId = window.requestAnimationFrame(this.animate)
     const delta = (time - this.prevTime) / 1000
-
     this.myMonsterMixer && this.myMonsterMixer.update(delta)
     this.myEnemyMonsterMixer && this.myEnemyMonsterMixer.update(delta)
     this.controls.update()
@@ -122,7 +118,6 @@ class Arena3D extends Component {
     // DOM element (canvas) dimensions
     const width = this.mount.clientWidth
     const height = this.mount.clientHeight
-
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(width, height)
@@ -132,13 +127,13 @@ class Arena3D extends Component {
     this.myMonsterModel = myGltf
     this.myMonsterObject = this.myMonsterModel.scene
 
-    const { enemyMonster } = this.props
-
     const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
     const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
-    const myMonsterCenter = myMonsterBox.getCenter(new THREE.Vector3())
+
+    const { enemyMonster } = this.props
 
     const gltfLoader = new GLTFLoader()
+
     gltfLoader.load(
       enemyMonster,
       enemyGltf => {
@@ -147,52 +142,46 @@ class Arena3D extends Component {
 
         const myEnemyMonsterBox = new THREE.Box3().setFromObject(this.myEnemyMonsterObject)
         const myEnemyMonsterSize = myEnemyMonsterBox.getSize(new THREE.Vector3()).length()
-        const myEnemyMonsterCenter = myEnemyMonsterBox.getCenter(new THREE.Vector3())
 
         const avgMonstersSize = (myMonsterSize + myEnemyMonsterSize) / 2
 
-        // Axis helper
-        this.scene.add(new THREE.AxesHelper(avgMonstersSize))
+        // Axis and Grid helper
+        // this.scene.add(new THREE.AxesHelper(avgMonstersSize * 4))
+        this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
         // clipping planes
         this.camera.near = avgMonstersSize / 100
         this.camera.far = avgMonstersSize * 100
 
-        // center my monster
-        this.myMonsterObject.position.x += (this.myMonsterObject.position.x - myMonsterCenter.x)
-        this.myMonsterObject.position.y += (this.myMonsterObject.position.y - myMonsterCenter.y)
-        this.myMonsterObject.position.z += (this.myMonsterObject.position.z - myMonsterCenter.z)
+        // DOM element (canvas) dimensions
+        const width = this.mount.clientWidth
+        const height = this.mount.clientHeight
 
         // distance my enemy monster from my monster
-        const distanceEnemy = avgMonstersSize * 0.75
-        this.myEnemyMonsterObject.position.z += distanceEnemy
-
-        // center my enemy monster
-        this.myEnemyMonsterObject.position.x += (this.myEnemyMonsterObject.position.x - myEnemyMonsterCenter.x)
-        this.myEnemyMonsterObject.position.y += (this.myEnemyMonsterObject.position.y - myEnemyMonsterCenter.y)
-        this.myEnemyMonsterObject.position.z += (this.myEnemyMonsterObject.position.z - myEnemyMonsterCenter.z)
-
-        // lower monster to fit
-        // this.myMonsterObject.position.y -= avgMonstersSize * 0.2
-        // this.myEnemyMonsterObject.position.y -= avgMonstersSize * 0.2
+        const enemyDistance = 750
+        this.myEnemyMonsterObject.position.z += enemyDistance
 
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
         this.myEnemyMonsterObject.updateMatrixWorld()
 
         // set camera initial position
-        this.camera.position.z += distanceEnemy
+        this.camera.position.z += 1200
 
-        const { x, z } = this.camera.position
+        const rotationAngle = -160 * (Math.PI / 180)
 
-        this.camera.position.y += avgMonstersSize / 2
+        const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
+        const translation = new THREE.Matrix4().makeTranslation(
+          this.camera.position.x,
+          this.camera.position.y + 250,
+          this.camera.position.z
+        )
+        const rotationX = new THREE.Matrix4().makeRotationX(12 * Math.PI/180)
 
-        const rotationAngle = -145 * (Math.PI / 180)
+        const transform = rotationY.multiply(translation)
 
-        this.camera.position.x = x * Math.cos(rotationAngle) + z * Math.sin(rotationAngle)
-        this.camera.position.z = z * Math.cos(rotationAngle) - x * Math.sin(rotationAngle)
+        this.camera.applyMatrix(rotationX.multiply(transform))
 
-        this.camera.lookAt(new THREE.Vector3(0, 0, distanceEnemy / 2))
         // update camera parameters
         this.camera.updateProjectionMatrix()
 
