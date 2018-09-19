@@ -1,8 +1,9 @@
-import React, { Fragment, Component } from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
-import myMonster from './assets/models/Devil.gltf'
-import enemyMonster from './assets/models/Rocky.gltf'
+import myMonster from './assets/models/Rocky.gltf'
+import enemyMonster from './assets/models/Bear.gltf'
 import Arena3D from '../../src'
+import "./index.css"
 
 class App extends Component {
   constructor(props) {
@@ -11,16 +12,13 @@ class App extends Component {
 
   render() {
     return (
-      <Fragment>
-        <h1>Arena3D</h1>
-        <Arena3D
+      <Arena3D
           myMonster={myMonster}
           enemyMonster={enemyMonster}
-          size={{ height: "800px" }}
+          size={{ width: "100vw", height: "50vw" }}
           background={{ alpha: 1 }}
           zoom={true}
         />
-      </Fragment>
     )
   }
 }

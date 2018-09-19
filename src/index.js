@@ -15,7 +15,15 @@ class Arena3D extends Component {
   }
 
   componentDidMount() {
-    const { background, myMonster, exposure, ambientIntensity, ambientColor, directIntensity, directColor } = this.props
+    const {
+      background,
+      myMonster,
+      exposure,
+      ambientIntensity,
+      ambientColor,
+      directIntensity,
+      directColor
+    } = this.props
 
     window.addEventListener(
       "resize", this.onWindowsResize, false
@@ -130,7 +138,7 @@ class Arena3D extends Component {
     const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
     const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
-    const { enemyMonster } = this.props
+    const { enemyMonster, cameraDistance } = this.props
 
     const gltfLoader = new GLTFLoader()
 
@@ -153,37 +161,16 @@ class Arena3D extends Component {
         this.camera.near = avgMonstersSize / 100
         this.camera.far = avgMonstersSize * 100
 
-        // DOM element (canvas) dimensions
-        const width = this.mount.clientWidth
-        const height = this.mount.clientHeight
-
         // distance my enemy monster from my monster
         const enemyDistance = 750
         this.myEnemyMonsterObject.position.z += enemyDistance
 
+        // rotate in Y my monster by 180º
+        this.myMonsterObject.rotation.y = Math.PI
+
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
         this.myEnemyMonsterObject.updateMatrixWorld()
-
-        // set camera initial position
-        this.camera.position.z += 1200
-
-        const rotationAngle = -160 * (Math.PI / 180)
-
-        const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-        const translation = new THREE.Matrix4().makeTranslation(
-          this.camera.position.x,
-          this.camera.position.y + 250,
-          this.camera.position.z
-        )
-        const rotationX = new THREE.Matrix4().makeRotationX(12 * Math.PI/180)
-
-        const transform = rotationY.multiply(translation)
-
-        this.camera.applyMatrix(rotationX.multiply(transform))
-
-        // update camera parameters
-        this.camera.updateProjectionMatrix()
 
         // add scene
         this.scene.add(this.myMonsterObject)
@@ -202,6 +189,27 @@ class Arena3D extends Component {
             this.myEnemyMonsterModel.animations, 'Idle'
           )
         ).play()
+
+        // set camera initial position
+        this.camera.position.z += cameraDistance
+
+        const rotationAngle = -160 * (Math.PI / 180)
+
+        const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
+        const translation = new THREE.Matrix4().makeTranslation(
+          this.camera.position.x,
+          this.camera.position.y + 250,
+          this.camera.position.z
+        )
+        const rotationX = new THREE.Matrix4().makeRotationX(17 * Math.PI / 180)
+
+        const transform = rotationY.multiply(translation)
+
+        // Apply the matrix of transformations
+        this.camera.applyMatrix(rotationX.multiply(transform))
+
+        // update camera parameters
+        this.camera.updateProjectionMatrix()
       },
       // TODO: add a loader.
       event => {
@@ -234,6 +242,7 @@ class Arena3D extends Component {
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
   enemyMonster: PropTypes.string.isRequired,
+  cameraDistance: PropTypes.number,
   ambientIntensity: PropTypes.number,
   ambientColor: PropTypes.number,
   directIntensity: PropTypes.number,
@@ -249,6 +258,7 @@ Arena3D.propTypes = {
 }
 
 Arena3D.defaultProps = {
+  cameraDistance: 1500,
   size: {
     width: "auto",
     height: "600px"
