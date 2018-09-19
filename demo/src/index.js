@@ -1,7 +1,7 @@
 import React, { Fragment, Component } from 'react'
 import { render } from 'react-dom'
 import myMonster from './assets/models/Devil.gltf'
-import enemyMonster from './assets/models/Tucan.gltf'
+import enemyMonster from './assets/models/Bear.gltf'
 import Arena3D from '../../src'
 
 class App extends Component {

@@ -173,8 +173,8 @@ class Arena3D extends Component {
         this.myEnemyMonsterObject.position.z += (this.myEnemyMonsterObject.position.z - myEnemyMonsterCenter.z)
 
         // lower monster to fit
-        this.myMonsterObject.position.y -= avgMonstersSize * 0.2
-        this.myEnemyMonsterObject.position.y -= avgMonstersSize * 0.2
+        // this.myMonsterObject.position.y -= avgMonstersSize * 0.2
+        // this.myEnemyMonsterObject.position.y -= avgMonstersSize * 0.2
 
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
