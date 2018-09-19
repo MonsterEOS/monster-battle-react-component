@@ -18,7 +18,7 @@ class Arena3D extends Component {
   }
 
   componentDidMount() {
-    const { background, path, exposure, ambientIntensity, ambientColor, directIntensity, directColor, zoom } = this.props
+    const { background, myMonster, exposure, ambientIntensity, ambientColor, directIntensity, directColor } = this.props
 
     // default values
     const defaultBackground = { color: "#322e3a", alpha: 1 }
@@ -38,7 +38,7 @@ class Arena3D extends Component {
     this.controls = new OrbitControls(this.camera, this.mount)
     this.controls.target.set(0, 0, 0)
     this.controls.screenSpacePanning = true
-    this.controls.enableZoom = zoom
+    this.controls.enableZoom = true
     this.controls.update()
 
     // add renderer
@@ -67,15 +67,15 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    // loading monster with GLTF loader
+    // loading monsters with GLTF loader
     const gltfLoader = new GLTFLoader()
     gltfLoader.load(
-      path,
+      myMonster,
       this.loadMonster,
       // TODO: add a loader.
       event => {
         const percentage = (event.loaded / event.total) * 100
-        console.log(`Loading 3D monster model... ${Math.round(percentage)}%`)
+        console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
       },
       console.error.bind(console)
     )
@@ -111,8 +111,8 @@ class Arena3D extends Component {
     this.frameId = window.requestAnimationFrame(this.animate)
     const delta = (time - this.prevTime) / 1000
 
-    this.monsterMixer && this.monsterMixer.update(delta)
-    this.sleepingMixer && this.sleepingMixer.update(delta)
+    this.myMonsterMixer && this.myMonsterMixer.update(delta)
+    this.myEnemyMonsterMixer && this.myEnemyMonsterMixer.update(delta)
     this.controls.update()
     this.renderScene()
     this.prevTime = time
@@ -128,84 +128,105 @@ class Arena3D extends Component {
     this.renderer.setSize(width, height)
   }
 
-  loadMonster = gltf => {
-    this.model = gltf
-    this.monster = this.model.scene
+  loadMonster = myGltf => {
+    this.myMonsterModel = myGltf
+    this.myMonsterObject = this.myMonsterModel.scene
 
-    const { rotation, position, cameraPosition } = this.props
-    const defaultValues = { x: 0, y: 0, z: 0 }
-    const monsterRot = { ...defaultValues, ...rotation }
-    const monsterPos = { ...defaultValues, ...position }
-    const cameraPos = { ...defaultValues, ...cameraPosition }
+    const { enemyMonster } = this.props
 
-    // center monster
-    const box = new THREE.Box3().setFromObject(this.monster)
-    const size = box.getSize(new THREE.Vector3()).length()
-    const center = box.getCenter(new THREE.Vector3())
+    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
+    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
+    const myMonsterCenter = myMonsterBox.getCenter(new THREE.Vector3())
 
-    // clipping planes
-    this.camera.near = size / 100
-    this.camera.far = size * 100
+    const gltfLoader = new GLTFLoader()
+    gltfLoader.load(
+      enemyMonster,
+      enemyGltf => {
+        this.myEnemyMonsterModel = enemyGltf
+        this.myEnemyMonsterObject = this.myEnemyMonsterModel.scene
 
-    // set monster initial position
-    this.monster.position.x += (this.monster.position.x - center.x)
-    this.monster.position.y += (this.monster.position.y - center.y)
-    this.monster.position.z += (this.monster.position.z - center.z)
+        const myEnemyMonsterBox = new THREE.Box3().setFromObject(this.myEnemyMonsterObject)
+        const myEnemyMonsterSize = myEnemyMonsterBox.getSize(new THREE.Vector3()).length()
+        const myEnemyMonsterCenter = myEnemyMonsterBox.getCenter(new THREE.Vector3())
 
-    // set monster position relative to initial position
-    this.monster.position.x += monsterPos.x
-    this.monster.position.y += monsterPos.y
-    this.monster.position.z += monsterPos.z
+        const avgMonstersSize = (myMonsterSize + myEnemyMonsterSize) / 2
 
-    // set model initial rotation
-    this.monster.rotation.x += monsterRot.x
-    this.monster.rotation.y += monsterRot.y
-    this.monster.rotation.z += monsterRot.z
+        // Axis helper
+        this.scene.add(new THREE.AxesHelper(avgMonstersSize))
 
-    // updates global transform of the monster
-    this.monster.updateMatrixWorld()
+        // clipping planes
+        this.camera.near = avgMonstersSize / 100
+        this.camera.far = avgMonstersSize * 100
 
-    // how far you can dolly out
-    this.controls.maxDistance = size * 10
+        // center my monster
+        this.myMonsterObject.position.x += (this.myMonsterObject.position.x - myMonsterCenter.x)
+        this.myMonsterObject.position.y += (this.myMonsterObject.position.y - myMonsterCenter.y)
+        this.myMonsterObject.position.z += (this.myMonsterObject.position.z - myMonsterCenter.z)
 
-    // set camera initial position
-    this.camera.lookAt(center)
-    this.camera.position.z += size
+        // distance my enemy monster from my monster
+        const distanceEnemy = avgMonstersSize * 0.75
+        this.myEnemyMonsterObject.position.z += distanceEnemy
 
-    // set camera position relative to initial position
-    this.camera.position.x += cameraPos.x
-    this.camera.position.y += cameraPos.y
-    this.camera.position.z += cameraPos.z
+        // center my enemy monster
+        this.myEnemyMonsterObject.position.x += (this.myEnemyMonsterObject.position.x - myEnemyMonsterCenter.x)
+        this.myEnemyMonsterObject.position.y += (this.myEnemyMonsterObject.position.y - myEnemyMonsterCenter.y)
+        this.myEnemyMonsterObject.position.z += (this.myEnemyMonsterObject.position.z - myEnemyMonsterCenter.z)
 
-    // update camera parameters
-    this.camera.updateProjectionMatrix()
+        // lower monster to fit
+        this.myMonsterObject.position.y -= avgMonstersSize * 0.2
+        this.myEnemyMonsterObject.position.y -= avgMonstersSize * 0.2
 
-    // backup camera to restore it later
-    this.backupCamera = this.camera.clone()
+        // updates global transform of the monsters
+        this.myMonsterObject.updateMatrixWorld()
+        this.myEnemyMonsterObject.updateMatrixWorld()
 
-    // add scene
-    this.scene.add(this.monster)
+        // set camera initial position
+        this.camera.position.z += distanceEnemy
 
-    // start animation
-    this.monsterMixer = new THREE.AnimationMixer(this.monster)
-    this.monsterMixer.clipAction(
-      this.model.animations[0]
-    ).play()
-  }
+        const { x, z } = this.camera.position
 
-  applyPropertyUpdate = () => {
-    const { autoRotate, autoRotateSpeed } = this.props
+        this.camera.position.y += avgMonstersSize / 2
 
-    // controls
-    this.controls.autoRotate = autoRotate
-    this.controls.autoRotateSpeed = autoRotateSpeed
+        const rotationAngle = -145 * (Math.PI / 180)
+
+        this.camera.position.x = x * Math.cos(rotationAngle) + z * Math.sin(rotationAngle)
+        this.camera.position.z = z * Math.cos(rotationAngle) - x * Math.sin(rotationAngle)
+
+        this.camera.lookAt(new THREE.Vector3(0, 0, distanceEnemy / 2))
+        // update camera parameters
+        this.camera.updateProjectionMatrix()
+
+        // add scene
+        this.scene.add(this.myMonsterObject)
+        this.scene.add(this.myEnemyMonsterObject)
+
+        // start animations
+        this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
+        this.myMonsterMixer.clipAction(
+          THREE.AnimationClip.findByName(
+            this.myMonsterModel.animations, 'Idle'
+          )
+        ).play()
+        this.myEnemyMonsterMixer = new THREE.AnimationMixer(this.myEnemyMonsterObject)
+        this.myEnemyMonsterMixer.clipAction(
+          THREE.AnimationClip.findByName(
+            this.myEnemyMonsterModel.animations, 'Idle'
+          )
+        ).play()
+      },
+      // TODO: add a loader.
+      event => {
+        const percentage = (event.loaded / event.total) * 100
+        console.log(`Loading my enemy monster 3D model... ${Math.round(percentage)}%`)
+      },
+      console.error.bind(console)
+    )
   }
 
   render() {
     const { size } = this.props
 
     if (this.mount) {
-      this.applyPropertyUpdate()
       this.changeStateAnimation()
     }
 
@@ -222,30 +243,12 @@ class Arena3D extends Component {
 }
 
 Arena3D.propTypes = {
-  path: PropTypes.string.isRequired,
-  position: PropTypes.shape({
-    x: PropTypes.number,
-    y: PropTypes.number,
-    z: PropTypes.number
-  }),
-  rotation: PropTypes.shape({
-    x: PropTypes.number,
-    y: PropTypes.number,
-    z: PropTypes.number
-  }),
-  autoRotate: PropTypes.bool,
-  autoRotateSpeed: PropTypes.number,
-  cameraPosition: PropTypes.shape({
-    x: PropTypes.number,
-    y: PropTypes.number,
-    z: PropTypes.number
-  }),
-  zoom: PropTypes.bool,
+  myMonster: PropTypes.string.isRequired,
+  enemyMonster: PropTypes.string.isRequired,
   ambientIntensity: PropTypes.number,
   ambientColor: PropTypes.number,
   directIntensity: PropTypes.number,
   directColor: PropTypes.number,
-  exposure: PropTypes.number,
   size: PropTypes.shape({
     width: PropTypes.string,
     height: PropTypes.string
@@ -261,15 +264,11 @@ Arena3D.defaultProps = {
     width: "auto",
     height: "600px"
   },
-  autoRotate: false,
-  autoRotateSpeed: -10,
-  zoom: true,
   ambientIntensity: 0.15,
   ambientColor: 0xffffff,
   directIntensity: 1.7,
   directColor: 0xffffff,
   exposure: 1,
-  darkeningColor: 0x000000
 }
 
 export default Arena3D
