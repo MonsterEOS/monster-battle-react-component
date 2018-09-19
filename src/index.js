@@ -191,22 +191,23 @@ class Arena3D extends Component {
         ).play()
 
         // set camera initial position
-        this.camera.position.z += cameraDistance
 
         const rotationAngle = -160 * (Math.PI / 180)
 
         const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-        const translation = new THREE.Matrix4().makeTranslation(
-          this.camera.position.x,
-          this.camera.position.y + 250,
-          this.camera.position.z
+        this.baseCameratranslation = new THREE.Matrix4().makeTranslation(
+          0, 250, cameraDistance
         )
+        const transform = rotationY.multiply(this.baseCameratranslation)
+        
         const rotationX = new THREE.Matrix4().makeRotationX(17 * Math.PI / 180)
 
-        const transform = rotationY.multiply(translation)
+        const finalTransform = rotationX.multiply(transform)
+
+       // const rotateBack = new THREE.Matrix4().makeRotationY(160 * (Math.PI / 180))
 
         // Apply the matrix of transformations
-        this.camera.applyMatrix(rotationX.multiply(transform))
+        this.camera.applyMatrix(finalTransform)
 
         // update camera parameters
         this.camera.updateProjectionMatrix()
