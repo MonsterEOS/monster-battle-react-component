@@ -17,7 +17,6 @@ class App extends Component {
           enemyMonster={enemyMonster}
           size={{ width: "100vw", height: "50vw" }}
           background={{ alpha: 1 }}
-          zoom={true}
         />
     )
   }

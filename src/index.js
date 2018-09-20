@@ -46,8 +46,7 @@ class Arena3D extends Component {
     // setting controls
     this.controls = new OrbitControls(this.camera, this.mount)
     this.controls.target.set(35, 95, 375)
-    this.controls.screenSpacePanning = true
-    this.controls.enableZoom = true
+    this.controls.enabled = false
     this.controls.update()
 
     // add renderer
@@ -275,7 +274,7 @@ Arena3D.defaultProps = {
   ambientColor: 0xffffff,
   directIntensity: 1.7,
   directColor: 0xffffff,
-  exposure: 1,
+  exposure: 1
 }
 
 export default Arena3D
