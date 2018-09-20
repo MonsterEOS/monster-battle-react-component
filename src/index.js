@@ -98,6 +98,13 @@ class Arena3D extends Component {
     this.mount.removeChild(this.renderer.domElement)
   }
 
+  shouldComponentUpdate(nextProps) {
+    return (
+      this.props.myMonster !== nextProps.myMonster ||
+      this.props.enemyMonster !== nextProps.enemyMonster
+    )
+  }
+
   start = () => {
     if (!this.frameId) {
       this.frameId = requestAnimationFrame(this.animate)
