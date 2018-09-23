@@ -18,6 +18,7 @@ class App extends Component {
           size={{ width: "100vw", height: "50vw" }}
           background={{ alpha: 1 }}
           zoom={true}
+          enableGrid={true}
         />
     )
   }

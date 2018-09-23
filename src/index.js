@@ -10,6 +10,9 @@ class Arena3D extends Component {
     this.setMountNodeRef = element => {
       this.mount = element
     }
+    window.addEventListener(
+      "resize", this.onWindowsResize, false
+    )
     // used to calculate the delta between frames
     this.prevTime = 0
   }
@@ -24,10 +27,6 @@ class Arena3D extends Component {
       directIntensity,
       directColor
     } = this.props
-
-    window.addEventListener(
-      "resize", this.onWindowsResize, false
-    )
 
     // default values
     const defaultBackground = { color: "#322e3a", alpha: 1 }
@@ -96,6 +95,9 @@ class Arena3D extends Component {
   componentWillUnmount() {
     this.stop()
     this.mount.removeChild(this.renderer.domElement)
+    window.removeEventListener(
+      "resize", this.onWindowsResize, false
+    )
   }
 
   start = () => {
@@ -138,7 +140,7 @@ class Arena3D extends Component {
     const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
     const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
-    const { enemyMonster, cameraDistance } = this.props
+    const { enemyMonster, cameraDistance, enableGrid } = this.props
 
     const gltfLoader = new GLTFLoader()
 
@@ -153,9 +155,8 @@ class Arena3D extends Component {
 
         const avgMonstersSize = (myMonsterSize + myEnemyMonsterSize) / 2
 
-        // Axis and Grid helper
-        // this.scene.add(new THREE.AxesHelper(avgMonstersSize * 4))
-        this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
+        // Grid helper
+        enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
         // clipping planes
         this.camera.near = avgMonstersSize / 100
@@ -199,12 +200,10 @@ class Arena3D extends Component {
           0, 250, cameraDistance
         )
         const transform = rotationY.multiply(this.baseCameratranslation)
-        
+
         const rotationX = new THREE.Matrix4().makeRotationX(17 * Math.PI / 180)
 
         const finalTransform = rotationX.multiply(transform)
-
-       // const rotateBack = new THREE.Matrix4().makeRotationY(160 * (Math.PI / 180))
 
         // Apply the matrix of transformations
         this.camera.applyMatrix(finalTransform)
@@ -255,7 +254,8 @@ Arena3D.propTypes = {
   background: PropTypes.shape({
     color: PropTypes.string,
     alpha: PropTypes.number
-  })
+  }),
+  enableGrid: PropTypes.bool
 }
 
 Arena3D.defaultProps = {
@@ -269,6 +269,7 @@ Arena3D.defaultProps = {
   directIntensity: 1.7,
   directColor: 0xffffff,
   exposure: 1,
+  enableGrid: false
 }
 
 export default Arena3D
