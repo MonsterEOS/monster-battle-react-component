@@ -132,11 +132,13 @@ class Arena3D extends Component {
 
   onWindowsResize = () => {
     // DOM element (canvas) dimensions
-    const width = this.mount.clientWidth
-    const height = this.mount.clientHeight
-    this.camera.aspect = width / height
-    this.camera.updateProjectionMatrix()
-    this.renderer.setSize(width, height)
+    if (this.mount) {
+      const width = this.mount.clientWidth
+      const height = this.mount.clientHeight
+      this.camera.aspect = width / height
+      this.camera.updateProjectionMatrix()
+      this.renderer.setSize(width, height)
+    }
   }
 
   loadMonster = myGltf => {
