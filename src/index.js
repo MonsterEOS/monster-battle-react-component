@@ -45,8 +45,7 @@ class Arena3D extends Component {
     // setting controls
     this.controls = new OrbitControls(this.camera, this.mount)
     this.controls.target.set(35, 95, 375)
-    this.controls.screenSpacePanning = true
-    this.controls.enableZoom = true
+    this.controls.enabled = false
     this.controls.update()
 
     // add renderer
@@ -97,6 +96,13 @@ class Arena3D extends Component {
     this.mount.removeChild(this.renderer.domElement)
     window.removeEventListener(
       "resize", this.onWindowsResize, false
+    )
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return (
+      this.props.myMonster !== nextProps.myMonster ||
+      this.props.enemyMonster !== nextProps.enemyMonster
     )
   }
 
