@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import GLTFLoader from './utils/GLTFLoader'
 import OrbitControls from './utils/OrbitControls'
 import { debounce } from './utils'
+import "../css/index.css"
 
 class Arena3D extends Component {
   constructor(props) {
@@ -277,11 +278,11 @@ Arena3D.propTypes = {
 }
 
 Arena3D.defaultProps = {
-  cameraDistance: 1500,
-  cameraRotation: -160,
-  cameraHeight: 250,
-  cameraHighAngle: 17,
-  enemyDistance: 750,
+  cameraDistance: 1700,
+  cameraRotation: -175,
+  cameraHeight: 350,
+  cameraHighAngle: 15,
+  enemyDistance: 950,
   size: {
     width: "auto",
     height: "600px"

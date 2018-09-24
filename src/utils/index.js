@@ -3,10 +3,10 @@
  * This timeout restarts evertime the function gets invoked before
  * the interval stablished.
  * 
- * @param {Number} [ms=1000] Interval of time to wait for next
+ * @param {Number} [ms=500] Interval of time to wait for next
  * invocation of the function.
  */
-export const debounce = (ms = 1000) => f => {
+export const debounce = (ms = 500) => f => {
     let inDebounce
     return function debounced(...params) {
         clearTimeout(inDebounce)

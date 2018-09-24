@@ -26,11 +26,6 @@ class App extends Component {
           background={{ alpha: 1 }}
           zoom={true}
           enableGrid={true}
-          cameraDistance={1700}
-          cameraRotation={-175}
-          cameraHeight={350}
-          enemyDistance={950}
-          cameraHighAngle={15}
         />
       </div>
     )
