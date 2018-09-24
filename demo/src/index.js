@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { render } from 'react-dom'
-import myMonster from './assets/models/Rocky.gltf'
+import myMonster from './assets/models/Wolf.gltf'
 import enemyMonster from './assets/models/Bear.gltf'
 import Arena3D from '../../src'
 import "./index.css"

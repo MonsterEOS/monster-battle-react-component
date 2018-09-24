@@ -183,8 +183,8 @@ class Arena3D extends Component {
         // distance my enemy monster from my monster
         this.myEnemyMonsterObject.position.z += enemyDistance
 
-        // rotate in Y my monster by 180º
-        this.myMonsterObject.rotation.y = Math.PI
+        // rotate in Y enemy monster by 180º
+        this.myEnemyMonsterObject.rotation.y = Math.PI
 
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
@@ -282,7 +282,7 @@ Arena3D.defaultProps = {
   cameraRotation: -175,
   cameraHeight: 350,
   cameraHighAngle: 15,
-  enemyDistance: 950,
+  enemyDistance: 900,
   size: {
     width: "auto",
     height: "600px"
