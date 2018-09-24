@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import GLTFLoader from './utils/GLTFLoader'
 import OrbitControls from './utils/OrbitControls'
 import { debounce } from './utils'
+import ArenaBase from '../models/ArenaBase.glb'
+import ArenaPilars from '../models/ArenaBasePilares.glb'
 import "../css/index.css"
 
 class Arena3D extends Component {
@@ -57,6 +59,7 @@ class Arena3D extends Component {
     this.renderer.setSize(width, height)
     this.renderer.gammaOutput = true
     this.renderer.toneMappingExposure = exposure
+    this.renderer.shadowMap.enabled = true
     this.mount.appendChild(this.renderer.domElement)
 
     // add ambiental light
@@ -67,6 +70,7 @@ class Arena3D extends Component {
     // add point light
     const pointLightSphere = new THREE.SphereBufferGeometry(20, 16, 8)
     this.pointLight = new THREE.PointLight(directColor, directIntensity, 6000)
+    this.pointLight.castShadow = true
     this.pointLight.add(new THREE.Mesh(
       pointLightSphere,
       new THREE.MeshBasicMaterial({ color: 0xffffff })
@@ -76,17 +80,47 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    // loading myMonster with GLTF loader
+    // GLTF loader
     const gltfLoader = new GLTFLoader()
+
+    // loading Arena environment
     gltfLoader.load(
-      myMonster,
-      this.loadMonster,
-      // TODO: add a loader.
-      event => {
-        const percentage = (event.loaded / event.total) * 100
-        console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
-      },
-      console.error.bind(console)
+      ArenaBase,
+      arenaGltf => {
+        this.arenaModel = arenaGltf
+        this.arenaObject = this.arenaModel.scene
+        this.arenaObject.scale.set(1.5, 1.5, 1.5)
+        this.arenaObject.position.y += -70
+        this.arenaObject.position.z += 400
+
+        this.arenaObject.updateMatrixWorld()
+
+        // loading arena pilars
+        gltfLoader.load(
+          ArenaPilars,
+          arenaPilarsGltf => {
+            this.arenaPilarsModel = arenaPilarsGltf
+            this.arenaPilarsObject = this.arenaPilarsModel.scene
+            this.arenaPilarsObject.scale.set(1.5, 1.5, 1.5)
+            this.arenaPilarsObject.position.y += -70
+            this.arenaPilarsObject.position.z += 400
+
+            this.arenaPilarsObject.updateMatrixWorld()
+
+            // loading monsters
+            gltfLoader.load(
+              myMonster,
+              this.loadMonsters,
+              // TODO: add a loader.
+              event => {
+                const percentage = (event.loaded / event.total) * 100
+                console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
+              },
+              console.error.bind(console)
+            )
+          }
+        )
+      }
     )
 
     // start scene
@@ -143,7 +177,7 @@ class Arena3D extends Component {
     }
   })
 
-  loadMonster = myGltf => {
+  loadMonsters = myGltf => {
     this.myMonsterModel = myGltf
     this.myMonsterObject = this.myMonsterModel.scene
 
@@ -177,7 +211,7 @@ class Arena3D extends Component {
         enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
         // clipping planes
-        this.camera.near = avgMonstersSize / 1000
+        this.camera.near = 1450
         this.camera.far = avgMonstersSize * 100
 
         // distance my enemy monster from my monster
@@ -186,13 +220,19 @@ class Arena3D extends Component {
         // rotate in Y enemy monster by 180º
         this.myEnemyMonsterObject.rotation.y = Math.PI
 
+        // enables casting shadows
+        this.myMonsterObject.castShadow = true
+        this.myEnemyMonsterObject.castShadow = true
+
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
         this.myEnemyMonsterObject.updateMatrixWorld()
 
-        // add scene
+        // add to scene
         this.scene.add(this.myMonsterObject)
         this.scene.add(this.myEnemyMonsterObject)
+        this.scene.add(this.arenaObject)
+        this.scene.add(this.arenaPilarsObject)
 
         // start animations
         this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)

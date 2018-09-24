@@ -1,13 +1,14 @@
 {
   "name": "monster-battle-react-component",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "main": "lib/index.js",
   "module": "es/index.js",
   "files": [
     "css",
     "es",
-    "lib"
+    "lib",
+    "models"
   ],
   "scripts": {
     "prepare": "npm run build",
