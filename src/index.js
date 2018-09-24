@@ -153,7 +153,9 @@ class Arena3D extends Component {
       cameraDistance,
       cameraRotation,
       cameraHeight,
-      enableGrid
+      cameraHighAngle,
+      enableGrid,
+      enemyDistance
     } = this.props
 
     // loading enemyMonster with GLTF loader
@@ -177,7 +179,6 @@ class Arena3D extends Component {
         this.camera.far = avgMonstersSize * 100
 
         // distance my enemy monster from my monster
-        const enemyDistance = 750
         this.myEnemyMonsterObject.position.z += enemyDistance
 
         // rotate in Y my monster by 180º
@@ -215,7 +216,7 @@ class Arena3D extends Component {
         )
         const transform = rotationY.multiply(this.baseCameratranslation)
 
-        const rotationX = new THREE.Matrix4().makeRotationX(17 * Math.PI / 180)
+        const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
 
         const finalTransform = rotationX.multiply(transform)
 
@@ -237,10 +238,6 @@ class Arena3D extends Component {
   render() {
     const { size, customStyles } = this.props
 
-    if (this.mount) {
-      this.changeStateAnimation()
-    }
-
     return (
       <div
         style={{
@@ -257,9 +254,11 @@ class Arena3D extends Component {
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
   enemyMonster: PropTypes.string.isRequired,
+  enemyDistance: PropTypes.number,
   cameraDistance: PropTypes.number,
   cameraRotation: PropTypes.number,
   cameraHeight: PropTypes.number,
+  cameraHighAngle: PropTypes.number,
   ambientIntensity: PropTypes.number,
   ambientColor: PropTypes.number,
   directIntensity: PropTypes.number,
@@ -280,6 +279,8 @@ Arena3D.defaultProps = {
   cameraDistance: 1500,
   cameraRotation: -160,
   cameraHeight: 250,
+  cameraHighAngle: 17,
+  enemyDistance: 750,
   size: {
     width: "auto",
     height: "600px"
