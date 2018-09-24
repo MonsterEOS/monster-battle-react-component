@@ -59,7 +59,6 @@ class Arena3D extends Component {
     this.renderer.setSize(width, height)
     this.renderer.gammaOutput = true
     this.renderer.toneMappingExposure = exposure
-    this.renderer.shadowMap.enabled = true
     this.mount.appendChild(this.renderer.domElement)
 
     // add ambiental light
@@ -70,7 +69,6 @@ class Arena3D extends Component {
     // add point light
     const pointLightSphere = new THREE.SphereBufferGeometry(20, 16, 8)
     this.pointLight = new THREE.PointLight(directColor, directIntensity, 6000)
-    this.pointLight.castShadow = true
     this.pointLight.add(new THREE.Mesh(
       pointLightSphere,
       new THREE.MeshBasicMaterial({ color: 0xffffff })
@@ -219,10 +217,6 @@ class Arena3D extends Component {
 
         // rotate in Y enemy monster by 180º
         this.myEnemyMonsterObject.rotation.y = Math.PI
-
-        // enables casting shadows
-        this.myMonsterObject.castShadow = true
-        this.myEnemyMonsterObject.castShadow = true
 
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
