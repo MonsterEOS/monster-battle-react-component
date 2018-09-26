@@ -10,21 +10,29 @@ import "./index.css"
 class App extends Component {
   constructor(props) {
     super(props)
+    this.arena = React.createRef()
     this.state = {
       myMonsterCurrentAction: ActionType.IDLE,
-      enemyMonsterCurrentAction: ActionType.IDLE
+      enemyMonsterCurrentAction: ActionType.IDLE,
+      attackButtonDisabled: false,
     }
   }
 
-  onChange = (event) => {
+  onAttack = (from) => {
     this.setState({
       ...this.state,
-      [event.target.name]: event.target.value
+      attackButtonDisabled: true
+    }, () => {
+
     })
   }
 
   render() {
-    const { myMonsterCurrentAction, enemyMonsterCurrentAction } = this.state
+    const {
+      myMonsterCurrentAction,
+      enemyMonsterCurrentAction,
+      attackButtonDisabled
+    } = this.state
 
     return (
       <div style={{
@@ -35,37 +43,34 @@ class App extends Component {
         margin: 0
       }}>
         <Arena3D
+          ref={this.arena}
           myMonster={myMonster}
           enemyMonster={enemyMonster}
-<<<<<<< HEAD
-          myMonsterDecor={monsterDecors.neutral}
-          enemyMonsterDecor={monsterDecors.neutral}
-=======
->>>>>>> c5c300f0f225895e4b8e8f6dd5db819d825c7764
           myMonsterCurrentAction={myMonsterCurrentAction}
           enemyMonsterCurrentAction={enemyMonsterCurrentAction}
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
-        My Monster &nbsp;
-        <select
-          name="myMonsterCurrentAction"
-          value={myMonsterCurrentAction}
-          onChange={this.onChange}
-        >
-          <option value={ActionType.ATTACK}>{ActionType.ATTACK}</option>
-          <option value={ActionType.HIT_REACT}>{ActionType.HIT_REACT}</option>
-        </select>
-        <br />
-        Enemy Monster &nbsp;
-        <select
-          name="enemyMonsterCurrentAction"
-          value={enemyMonsterCurrentAction}
-          onChange={this.onChange}
-        >
-          <option value={ActionType.ATTACK}>{ActionType.ATTACK}</option>
-          <option value={ActionType.HIT_REACT}>{ActionType.HIT_REACT}</option>
-        </select>
+        <div className="buttons-container">
+          <div>
+            <span>My Monster</span>&nbsp;
+            <button
+              disabled={attackButtonDisabled}
+              onClick={this.onAttack.bind(null, "myMonster")}
+            >
+              Attack
+            </button>
+          </div>
+          <div>
+            <span>Enemy Monster</span> &nbsp;
+            <button
+              disabled={attackButtonDisabled}
+              onClick={this.onAttack.bind(null, "enemyMonster")}
+            >
+              Attack
+            </button>
+          </div>
+        </div>
       </div>
     )
   }

@@ -236,13 +236,19 @@ class Arena3D extends Component {
             if (child.material[0]) {
               child.material.forEach((material, idx) => {
                 if (material.map) {
-                  child.material[idx] = this.monsterMaterial(material.map, this.props.myMonsterDecor)
+                  child.material[idx] = this.monsterMaterial(
+                    material.map,
+                    this.props.myMonsterDecor
+                  )
                 }
               })
             }
             else {
               if (child.material.map) {
-                child.material = this.monsterMaterial(child.material.map, this.props.myMonsterDecor)
+                child.material = this.monsterMaterial(
+                  child.material.map,
+                  this.props.myMonsterDecor
+                )
               }
             }
           }
@@ -253,13 +259,19 @@ class Arena3D extends Component {
             if (child.material[0]) {
               child.material.forEach((material, idx) => {
                 if (material.map) {
-                  child.material[idx] = this.monsterMaterial(material.map, this.props.enemyMonsterDecor)
+                  child.material[idx] = this.monsterMaterial(
+                    material.map,
+                    this.props.enemyMonsterDecor
+                  )
                 }
               })
             }
             else {
               if (child.material.map) {
-                child.material = this.monsterMaterial(child.material.map, this.props.enemyMonsterDecor)
+                child.material = this.monsterMaterial(
+                  child.material.map,
+                  this.props.enemyMonsterDecor
+                )
               }
             }
           }
@@ -272,13 +284,19 @@ class Arena3D extends Component {
               if (child.material[0]) {
                 child.material.forEach((material, idx) => {
                   if (material.map) {
-                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                    child.material[idx] = this.monsterMaterial(
+                      material.map,
+                      this.props.coliseumDecor
+                    )
                   }
                 })
               }
               else {
                 if (child.material.map) {
-                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                  child.material = this.monsterMaterial(
+                    child.material.map,
+                    this.props.coliseumDecor
+                  )
                 }
               }
             }
@@ -289,13 +307,19 @@ class Arena3D extends Component {
               if (child.material[0]) {
                 child.material.forEach((material, idx) => {
                   if (material.map) {
-                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                    child.material[idx] = this.monsterMaterial(
+                      material.map,
+                      this.props.coliseumDecor
+                    )
                   }
                 })
               }
               else {
                 if (child.material.map) {
-                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                  child.material = this.monsterMaterial(
+                    child.material.map,
+                    this.props.coliseumDecor
+                  )
                 }
               }
             }
@@ -373,6 +397,7 @@ class Arena3D extends Component {
       this.myMonsterMixer
         .clipAction(myMonsterAnimation)
         .setLoop(THREE.LoopOnce)
+        .reset()
         .play()
     }
 
@@ -380,6 +405,7 @@ class Arena3D extends Component {
       this.myEnemyMonsterMixer
         .clipAction(enemyMonsterAnimation)
         .setLoop(THREE.LoopOnce)
+        .reset()
         .play()
     }
     console.log("Did I execute?");
@@ -387,10 +413,6 @@ class Arena3D extends Component {
 
   render() {
     const { size, customStyles } = this.props
-
-    if (this.mount) {
-      this.changeAnimationState()
-    }
 
     return (
       <div
