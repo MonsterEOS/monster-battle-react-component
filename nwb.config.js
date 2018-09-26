@@ -9,7 +9,7 @@ module.exports = {
       module: {
         rules: [
           {
-            test: /\.(gltf|glb|obj)$/,
+            test: /\.(gltf|glb|obj|glsl)$/,
             use: [
               {
                 loader: 'file-loader',

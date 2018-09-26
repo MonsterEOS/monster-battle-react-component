@@ -6,6 +6,8 @@ import OrbitControls from './utils/OrbitControls'
 import { debounce } from './utils'
 import ArenaBase from '../models/ArenaBase.glb'
 import ArenaPilars from '../models/ArenaBasePilares.glb'
+import VertexStudioMaterial from './utils/VextexStudioMaterial'
+import monsterDecors from './utils/decors'
 import "../css/index.css"
 
 class Arena3D extends Component {
@@ -78,48 +80,53 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    // GLTF loader
-    const gltfLoader = new GLTFLoader()
+    VertexStudioMaterial()
+      .then(VertexStudioMaterial => {
+        this.monsterMaterial = VertexStudioMaterial
 
-    // loading Arena environment
-    gltfLoader.load(
-      ArenaBase,
-      arenaGltf => {
-        this.arenaModel = arenaGltf
-        this.arenaObject = this.arenaModel.scene
-        this.arenaObject.scale.set(1.5, 1.5, 1.5)
-        this.arenaObject.position.y += -70
-        this.arenaObject.position.z += 400
+        // GLTF loader
+        const gltfLoader = new GLTFLoader()
 
-        this.arenaObject.updateMatrixWorld()
-
-        // loading arena pilars
+        // loading Arena environment
         gltfLoader.load(
-          ArenaPilars,
-          arenaPilarsGltf => {
-            this.arenaPilarsModel = arenaPilarsGltf
-            this.arenaPilarsObject = this.arenaPilarsModel.scene
-            this.arenaPilarsObject.scale.set(1.5, 1.5, 1.5)
-            this.arenaPilarsObject.position.y += -70
-            this.arenaPilarsObject.position.z += 400
+          ArenaBase,
+          arenaGltf => {
+            this.arenaModel = arenaGltf
+            this.arenaObject = this.arenaModel.scene
+            this.arenaObject.scale.set(1.5, 1.5, 1.5)
+            this.arenaObject.position.y += -70
+            this.arenaObject.position.z += 400
 
-            this.arenaPilarsObject.updateMatrixWorld()
+            this.arenaObject.updateMatrixWorld()
 
-            // loading monsters
+            // loading arena pilars
             gltfLoader.load(
-              myMonster,
-              this.loadMonsters,
-              // TODO: add a loader.
-              event => {
-                const percentage = (event.loaded / event.total) * 100
-                console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
-              },
-              console.error.bind(console)
+              ArenaPilars,
+              arenaPilarsGltf => {
+                this.arenaPilarsModel = arenaPilarsGltf
+                this.arenaPilarsObject = this.arenaPilarsModel.scene
+                this.arenaPilarsObject.scale.set(1.5, 1.5, 1.5)
+                this.arenaPilarsObject.position.y += -70
+                this.arenaPilarsObject.position.z += 400
+
+                this.arenaPilarsObject.updateMatrixWorld()
+
+                // loading monsters
+                gltfLoader.load(
+                  myMonster,
+                  this.loadMonsters,
+                  // TODO: add a loader.
+                  event => {
+                    const percentage = (event.loaded / event.total) * 100
+                    console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
+                  },
+                  console.error.bind(console)
+                )
+              }
             )
           }
         )
-      }
-    )
+      })
 
     // start scene
     this.start()
@@ -222,6 +229,78 @@ class Arena3D extends Component {
         this.myMonsterObject.updateMatrixWorld()
         this.myEnemyMonsterObject.updateMatrixWorld()
 
+        // applying shaders to both monsters
+        this.myMonsterObject.traverse(child => {
+          if (child.isMesh) {
+            if (child.material[0]) {
+              child.material.forEach((material, idx) => {
+                if (material.map) {
+                  child.material[idx] = this.monsterMaterial(material.map, this.props.myMonsterDecor)
+                }
+              })
+            }
+            else {
+              if (child.material.map) {
+                child.material = this.monsterMaterial(child.material.map, this.props.myMonsterDecor)
+              }
+            }
+          }
+        })
+
+        this.myEnemyMonsterObject.traverse(child => {
+          if (child.isMesh) {
+            if (child.material[0]) {
+              child.material.forEach((material, idx) => {
+                if (material.map) {
+                  child.material[idx] = this.monsterMaterial(material.map, this.props.enemyMonsterDecor)
+                }
+              })
+            }
+            else {
+              if (child.material.map) {
+                child.material = this.monsterMaterial(child.material.map, this.props.enemyMonsterDecor)
+              }
+            }
+          }
+        })
+
+        // applying shaders to coliseum
+        if (this.props.coliseumDecor) {
+          this.arenaObject.traverse(child => {
+            if (child.isMesh) {
+              if (child.material[0]) {
+                child.material.forEach((material, idx) => {
+                  if (material.map) {
+                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                  }
+                })
+              }
+              else {
+                if (child.material.map) {
+                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                }
+              }
+            }
+          })
+
+          this.arenaPilarsObject.traverse(child => {
+            if (child.isMesh) {
+              if (child.material[0]) {
+                child.material.forEach((material, idx) => {
+                  if (material.map) {
+                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                  }
+                })
+              }
+              else {
+                if (child.material.map) {
+                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                }
+              }
+            }
+          })
+        }
+
         // add to scene
         this.scene.add(this.myMonsterObject)
         this.scene.add(this.myEnemyMonsterObject)
@@ -290,6 +369,9 @@ class Arena3D extends Component {
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
   enemyMonster: PropTypes.string.isRequired,
+  myMonsterDecor: PropTypes.object,
+  enemyMonsterDecor: PropTypes.object,
+  coliseumDecor: PropTypes.object,
   enemyDistance: PropTypes.number,
   cameraDistance: PropTypes.number,
   cameraRotation: PropTypes.number,
@@ -312,6 +394,9 @@ Arena3D.propTypes = {
 }
 
 Arena3D.defaultProps = {
+  myMonsterDecor: monsterDecors.neutral,
+  enemyMonsterDecor: monsterDecors.neutral,
+  coliseumDecor: undefined,
   cameraDistance: 1700,
   cameraRotation: -175,
   cameraHeight: 350,
