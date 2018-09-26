@@ -37,8 +37,11 @@ class App extends Component {
         <Arena3D
           myMonster={myMonster}
           enemyMonster={enemyMonster}
+<<<<<<< HEAD
           myMonsterDecor={monsterDecors.neutral}
           enemyMonsterDecor={monsterDecors.neutral}
+=======
+>>>>>>> c5c300f0f225895e4b8e8f6dd5db819d825c7764
           myMonsterCurrentAction={myMonsterCurrentAction}
           enemyMonsterCurrentAction={enemyMonsterCurrentAction}
           size={{ width: "100%", height: "100%" }}
