@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { ActionType } from './utils/enums'
 import * as THREE from 'three'
 import GLTFLoader from './utils/GLTFLoader'
 import OrbitControls from './utils/OrbitControls'
@@ -135,8 +136,8 @@ class Arena3D extends Component {
 
   shouldComponentUpdate(nextProps) {
     return (
-      this.props.myMonster !== nextProps.myMonster ||
-      this.props.enemyMonster !== nextProps.enemyMonster
+      this.props.myMonsterCurrentAction !== nextProps.myMonsterCurrentAction ||
+      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction
     )
   }
 
@@ -228,19 +229,9 @@ class Arena3D extends Component {
         this.scene.add(this.arenaObject)
         this.scene.add(this.arenaPilarsObject)
 
-        // start animations
+        // define animation mixers
         this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
-        this.myMonsterMixer.clipAction(
-          THREE.AnimationClip.findByName(
-            this.myMonsterModel.animations, 'Idle'
-          )
-        ).play()
         this.myEnemyMonsterMixer = new THREE.AnimationMixer(this.myEnemyMonsterObject)
-        this.myEnemyMonsterMixer.clipAction(
-          THREE.AnimationClip.findByName(
-            this.myEnemyMonsterModel.animations, 'Idle'
-          )
-        ).play()
 
         // set camera initial position
 
@@ -261,6 +252,21 @@ class Arena3D extends Component {
 
         // update camera parameters
         this.camera.updateProjectionMatrix()
+
+        // start idle animations
+        this.myMonsterMixer
+          .clipAction(THREE.AnimationClip.findByName(
+            this.myMonsterModel.animations,
+            "Idle"
+          ))
+          .play()
+
+        this.myEnemyMonsterMixer
+          .clipAction(THREE.AnimationClip.findByName(
+            this.myEnemyMonsterModel.animations,
+            "Idle"
+          ))
+          .play()
       },
       // TODO: add a loader.
       event => {
@@ -271,8 +277,41 @@ class Arena3D extends Component {
     )
   }
 
+  changeAnimationState = () => {
+    const { myMonsterCurrentAction, enemyMonsterCurrentAction } = this.props
+
+    const myMonsterAnimation = THREE.AnimationClip.findByName(
+      this.myMonsterModel.animations,
+      myMonsterCurrentAction
+    )
+
+    const enemyMonsterAnimation = THREE.AnimationClip.findByName(
+      this.myEnemyMonsterModel.animations,
+      enemyMonsterCurrentAction
+    )
+
+    if (myMonsterCurrentAction !== ActionType.IDLE) {
+      this.myMonsterMixer
+        .clipAction(myMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .play()
+    }
+
+    if (enemyMonsterCurrentAction !== ActionType.IDLE) {
+      this.myEnemyMonsterMixer
+        .clipAction(enemyMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .play()
+    }
+    console.log("Did I execute?");
+  }
+
   render() {
     const { size, customStyles } = this.props
+
+    if (this.mount) {
+      this.changeAnimationState()
+    }
 
     return (
       <div
@@ -289,6 +328,32 @@ class Arena3D extends Component {
 
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
+  myMonsterCurrentAction: function (props, propName, componentName) {
+    const validActions = Object.keys(ActionType).map(
+      key => ActionType[key]
+    )
+    if (!validActions.includes(props[propName])) {
+      return new Error(
+        `Invalid ${propName} supplied to ${componentName}. ` +
+        `Use the ActionType enum to supply a valid value. ` +
+        `Valid values are: Idle, Attack, HitReact, Sleeping, ` +
+        `Feeding and Dead.`
+      )
+    }
+  },
+  enemyMonsterCurrentAction: function (props, propName, componentName) {
+    const validActions = Object.keys(ActionType).map(
+      key => ActionType[key]
+    )
+    if (!validActions.includes(props[propName])) {
+      return new Error(
+        `Invalid ${propName} supplied to ${componentName}. ` +
+        `Use the ActionType enum to supply a valid value. ` +
+        `Valid values are: Idle, Attack, HitReact, Sleeping, ` +
+        `Feeding and Dead.`
+      )
+    }
+  },
   enemyMonster: PropTypes.string.isRequired,
   enemyDistance: PropTypes.number,
   cameraDistance: PropTypes.number,
