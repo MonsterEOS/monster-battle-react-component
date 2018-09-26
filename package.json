@@ -1,6 +1,6 @@
 {
   "name": "monster-battle-react-component",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -8,7 +8,8 @@
     "css",
     "es",
     "lib",
-    "models"
+    "models",
+    "shaders"
   ],
   "scripts": {
     "prepare": "npm run build",
