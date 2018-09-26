@@ -12,27 +12,25 @@ class App extends Component {
     super(props)
     this.arena = React.createRef()
     this.state = {
-      myMonsterCurrentAction: ActionType.IDLE,
-      enemyMonsterCurrentAction: ActionType.IDLE,
       attackButtonDisabled: false,
     }
   }
 
   onAttack = (from) => {
     this.setState({
-      ...this.state,
       attackButtonDisabled: true
     }, () => {
-
+      this.arena.current.changeAnimationState(
+        from === "myMonster",
+        () => this.setState({
+          attackButtonDisabled: false
+        })
+      )
     })
   }
 
   render() {
-    const {
-      myMonsterCurrentAction,
-      enemyMonsterCurrentAction,
-      attackButtonDisabled
-    } = this.state
+    const { attackButtonDisabled } = this.state
 
     return (
       <div style={{
@@ -46,11 +44,10 @@ class App extends Component {
           ref={this.arena}
           myMonster={myMonster}
           enemyMonster={enemyMonster}
-          myMonsterCurrentAction={myMonsterCurrentAction}
-          enemyMonsterCurrentAction={enemyMonsterCurrentAction}
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
+
         <div className="buttons-container">
           <div>
             <span>My Monster</span>&nbsp;

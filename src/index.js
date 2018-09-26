@@ -380,35 +380,31 @@ class Arena3D extends Component {
     )
   }
 
-  changeAnimationState = () => {
-    const { myMonsterCurrentAction, enemyMonsterCurrentAction } = this.props
+  changeAnimationState = (isMyMonsterAttacking, callback) => {
 
     const myMonsterAnimation = THREE.AnimationClip.findByName(
       this.myMonsterModel.animations,
-      myMonsterCurrentAction
+      isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
     )
 
     const enemyMonsterAnimation = THREE.AnimationClip.findByName(
       this.myEnemyMonsterModel.animations,
-      enemyMonsterCurrentAction
+      isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
     )
 
-    if (myMonsterCurrentAction !== ActionType.IDLE) {
-      this.myMonsterMixer
-        .clipAction(myMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-        .play()
-    }
+    this.myMonsterMixer
+      .clipAction(myMonsterAnimation)
+      .setLoop(THREE.LoopOnce)
+      .reset()
+      .play()
 
-    if (enemyMonsterCurrentAction !== ActionType.IDLE) {
-      this.myEnemyMonsterMixer
-        .clipAction(enemyMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-        .play()
-    }
-    console.log("Did I execute?");
+    this.myEnemyMonsterMixer
+      .clipAction(enemyMonsterAnimation)
+      .setLoop(THREE.LoopOnce)
+      .reset()
+      .play()
+    
+    callback()
   }
 
   render() {
@@ -429,32 +425,6 @@ class Arena3D extends Component {
 
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
-  myMonsterCurrentAction: function (props, propName, componentName) {
-    const validActions = Object.keys(ActionType).map(
-      key => ActionType[key]
-    )
-    if (!validActions.includes(props[propName])) {
-      return new Error(
-        `Invalid ${propName} supplied to ${componentName}. ` +
-        `Use the ActionType enum to supply a valid value. ` +
-        `Valid values are: Idle, Attack, HitReact, Sleeping, ` +
-        `Feeding and Dead.`
-      )
-    }
-  },
-  enemyMonsterCurrentAction: function (props, propName, componentName) {
-    const validActions = Object.keys(ActionType).map(
-      key => ActionType[key]
-    )
-    if (!validActions.includes(props[propName])) {
-      return new Error(
-        `Invalid ${propName} supplied to ${componentName}. ` +
-        `Use the ActionType enum to supply a valid value. ` +
-        `Valid values are: Idle, Attack, HitReact, Sleeping, ` +
-        `Feeding and Dead.`
-      )
-    }
-  },
   enemyMonster: PropTypes.string.isRequired,
   myMonsterDecor: PropTypes.object,
   enemyMonsterDecor: PropTypes.object,
