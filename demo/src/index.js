@@ -18,14 +18,10 @@ class App extends Component {
 
   onAttack = (from) => {
     this.setState({
-      attackButtonDisabled: false
+      attackButtonDisabled: true
     }, () => {
-      this.arena.current.changeAnimationState(
-        from === "myMonster",
-        () => this.setState({
-          attackButtonDisabled: false
-        })
-      )
+      this.arena.current.changeAnimationState(from === "myMonster")
+        .then(() => this.setState({ attackButtonDisabled: false }))
     })
   }
 

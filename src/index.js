@@ -382,55 +382,63 @@ class Arena3D extends Component {
     )
   }
 
-  changeAnimationState = (isMyMonsterAttacking, afterAnimationsCB) => {
-
-    // define animation clip to play for each monster
-    const myMonsterAnimation = THREE.AnimationClip.findByName(
-      this.myMonsterModel.animations,
-      isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
-    )
-
-    const enemyMonsterAnimation = THREE.AnimationClip.findByName(
-      this.enemyMonsterModel.animations,
-      isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
-    )
-
-    // define to play animation once
-    this.myMonsterAction && this.myMonsterAction.stop()
-    this.myMonsterAction = this.myMonsterMixer
-      .clipAction(myMonsterAnimation)
-      .setLoop(THREE.LoopOnce)
-      .reset()
-
-    this.enemyMonsterAction && this.enemyMonsterAction.stop()
-    this.enemyMonsterAction = this.enemyMonsterMixer
-      .clipAction(enemyMonsterAnimation)
-      .setLoop(THREE.LoopOnce)
-      .reset()
-
-    // define listener to play HitReact animation after the Attack
-    isMyMonsterAttacking
-      ? this.myMonsterMixer.addEventListener(
-        "finished",
-        this.myMonsterAttacking
-      )
-      : this.enemyMonsterMixer.addEventListener(
-        "finished",
-        this.enemyMonsterAttacking
+  changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {
+    try {
+      // define animation clip to play for each monster
+      const myMonsterAnimation = THREE.AnimationClip.findByName(
+        this.myMonsterModel.animations,
+        isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
       )
 
-    // play Attack animation
-    isMyMonsterAttacking
-      ? this.myMonsterAction.play()
-      : this.enemyMonsterAction.play()
-  }
+      const enemyMonsterAnimation = THREE.AnimationClip.findByName(
+        this.enemyMonsterModel.animations,
+        isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
+      )
 
-  myMonsterAttacking(event) {
+      // define to play animation once
+      this.myMonsterAction && this.myMonsterAction.stop()
+      this.myMonsterAction = this.myMonsterMixer
+        .clipAction(myMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .reset()
+
+      this.enemyMonsterAction && this.enemyMonsterAction.stop()
+      this.enemyMonsterAction = this.enemyMonsterMixer
+        .clipAction(enemyMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .reset()
+
+      // define listener to play HitReact animation after the Attack
+      isMyMonsterAttacking
+        ? this.myMonsterMixer.addEventListener(
+          "finished",
+          this.myMonsterAttacking
+        )
+        : this.enemyMonsterMixer.addEventListener(
+          "finished",
+          this.enemyMonsterAttacking
+        )
+
+      // play Attack animation
+      isMyMonsterAttacking
+        ? this.myMonsterAction.play()
+        : this.enemyMonsterAction.play()
+
+      // defining listener to resolve promise
+      isMyMonsterAttacking
+        ? this.enemyMonsterMixer.addEventListener("finished", resolve)
+        : this.myMonsterMixer.addEventListener("finished", resolve)
+    } catch (error) {
+      reject(error)
+    }
+  })
+
+  myMonsterAttacking() {
     this.enemyMonsterAction.play()
     this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
   }
 
-  enemyMonsterAttacking(event) {
+  enemyMonsterAttacking() {
     this.myMonsterAction.play()
     this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
   }
