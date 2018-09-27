@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { ActionType } from './utils/enums'
 import * as THREE from 'three'
 import GLTFLoader from './utils/GLTFLoader'
 import OrbitControls from './utils/OrbitControls'
@@ -21,6 +22,8 @@ class Arena3D extends Component {
     )
     // used to calculate the delta between frames
     this.prevTime = 0
+    this.myMonsterAttacking = this.myMonsterAttacking.bind(this)
+    this.enemyMonsterAttacking = this.enemyMonsterAttacking.bind(this)
   }
 
   componentDidMount() {
@@ -142,8 +145,8 @@ class Arena3D extends Component {
 
   shouldComponentUpdate(nextProps) {
     return (
-      this.props.myMonster !== nextProps.myMonster ||
-      this.props.enemyMonster !== nextProps.enemyMonster
+      this.props.myMonsterCurrentAction !== nextProps.myMonsterCurrentAction ||
+      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction
     )
   }
 
@@ -165,7 +168,7 @@ class Arena3D extends Component {
     this.frameId = window.requestAnimationFrame(this.animate)
     const delta = (time - this.prevTime) / 1000
     this.myMonsterMixer && this.myMonsterMixer.update(delta)
-    this.myEnemyMonsterMixer && this.myEnemyMonsterMixer.update(delta)
+    this.enemyMonsterMixer && this.enemyMonsterMixer.update(delta)
     this.controls.update()
     this.renderScene()
     this.prevTime = time
@@ -204,13 +207,13 @@ class Arena3D extends Component {
     gltfLoader.load(
       enemyMonster,
       enemyGltf => {
-        this.myEnemyMonsterModel = enemyGltf
-        this.myEnemyMonsterObject = this.myEnemyMonsterModel.scene
+        this.enemyMonsterModel = enemyGltf
+        this.enemyMonsterObject = this.enemyMonsterModel.scene
 
-        const myEnemyMonsterBox = new THREE.Box3().setFromObject(this.myEnemyMonsterObject)
-        const myEnemyMonsterSize = myEnemyMonsterBox.getSize(new THREE.Vector3()).length()
+        const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
+        const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
 
-        const avgMonstersSize = (myMonsterSize + myEnemyMonsterSize) / 2
+        const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
 
         // Grid helper
         enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
@@ -220,14 +223,14 @@ class Arena3D extends Component {
         this.camera.far = avgMonstersSize * 100
 
         // distance my enemy monster from my monster
-        this.myEnemyMonsterObject.position.z += enemyDistance
+        this.enemyMonsterObject.position.z += enemyDistance
 
         // rotate in Y enemy monster by 180º
-        this.myEnemyMonsterObject.rotation.y = Math.PI
+        this.enemyMonsterObject.rotation.y = Math.PI
 
         // updates global transform of the monsters
         this.myMonsterObject.updateMatrixWorld()
-        this.myEnemyMonsterObject.updateMatrixWorld()
+        this.enemyMonsterObject.updateMatrixWorld()
 
         // applying shaders to both monsters
         this.myMonsterObject.traverse(child => {
@@ -235,30 +238,42 @@ class Arena3D extends Component {
             if (child.material[0]) {
               child.material.forEach((material, idx) => {
                 if (material.map) {
-                  child.material[idx] = this.monsterMaterial(material.map, this.props.myMonsterDecor)
+                  child.material[idx] = this.monsterMaterial(
+                    material.map,
+                    this.props.myMonsterDecor
+                  )
                 }
               })
             }
             else {
               if (child.material.map) {
-                child.material = this.monsterMaterial(child.material.map, this.props.myMonsterDecor)
+                child.material = this.monsterMaterial(
+                  child.material.map,
+                  this.props.myMonsterDecor
+                )
               }
             }
           }
         })
 
-        this.myEnemyMonsterObject.traverse(child => {
+        this.enemyMonsterObject.traverse(child => {
           if (child.isMesh) {
             if (child.material[0]) {
               child.material.forEach((material, idx) => {
                 if (material.map) {
-                  child.material[idx] = this.monsterMaterial(material.map, this.props.enemyMonsterDecor)
+                  child.material[idx] = this.monsterMaterial(
+                    material.map,
+                    this.props.enemyMonsterDecor
+                  )
                 }
               })
             }
             else {
               if (child.material.map) {
-                child.material = this.monsterMaterial(child.material.map, this.props.enemyMonsterDecor)
+                child.material = this.monsterMaterial(
+                  child.material.map,
+                  this.props.enemyMonsterDecor
+                )
               }
             }
           }
@@ -271,13 +286,19 @@ class Arena3D extends Component {
               if (child.material[0]) {
                 child.material.forEach((material, idx) => {
                   if (material.map) {
-                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                    child.material[idx] = this.monsterMaterial(
+                      material.map,
+                      this.props.coliseumDecor
+                    )
                   }
                 })
               }
               else {
                 if (child.material.map) {
-                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                  child.material = this.monsterMaterial(
+                    child.material.map,
+                    this.props.coliseumDecor
+                  )
                 }
               }
             }
@@ -288,13 +309,19 @@ class Arena3D extends Component {
               if (child.material[0]) {
                 child.material.forEach((material, idx) => {
                   if (material.map) {
-                    child.material[idx] = this.monsterMaterial(material.map, this.props.coliseumDecor)
+                    child.material[idx] = this.monsterMaterial(
+                      material.map,
+                      this.props.coliseumDecor
+                    )
                   }
                 })
               }
               else {
                 if (child.material.map) {
-                  child.material = this.monsterMaterial(child.material.map, this.props.coliseumDecor)
+                  child.material = this.monsterMaterial(
+                    child.material.map,
+                    this.props.coliseumDecor
+                  )
                 }
               }
             }
@@ -303,23 +330,13 @@ class Arena3D extends Component {
 
         // add to scene
         this.scene.add(this.myMonsterObject)
-        this.scene.add(this.myEnemyMonsterObject)
+        this.scene.add(this.enemyMonsterObject)
         this.scene.add(this.arenaObject)
         this.scene.add(this.arenaPilarsObject)
 
-        // start animations
+        // define animation mixers
         this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
-        this.myMonsterMixer.clipAction(
-          THREE.AnimationClip.findByName(
-            this.myMonsterModel.animations, 'Idle'
-          )
-        ).play()
-        this.myEnemyMonsterMixer = new THREE.AnimationMixer(this.myEnemyMonsterObject)
-        this.myEnemyMonsterMixer.clipAction(
-          THREE.AnimationClip.findByName(
-            this.myEnemyMonsterModel.animations, 'Idle'
-          )
-        ).play()
+        this.enemyMonsterMixer = new THREE.AnimationMixer(this.enemyMonsterObject)
 
         // set camera initial position
 
@@ -340,6 +357,21 @@ class Arena3D extends Component {
 
         // update camera parameters
         this.camera.updateProjectionMatrix()
+
+        // start idle animations
+        this.myMonsterMixer
+          .clipAction(THREE.AnimationClip.findByName(
+            this.myMonsterModel.animations,
+            "Idle"
+          ))
+          .play()
+
+        this.enemyMonsterMixer
+          .clipAction(THREE.AnimationClip.findByName(
+            this.enemyMonsterModel.animations,
+            "Idle"
+          ))
+          .play()
       },
       // TODO: add a loader.
       event => {
@@ -348,6 +380,67 @@ class Arena3D extends Component {
       },
       console.error.bind(console)
     )
+  }
+
+  changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {
+    try {
+      // define animation clip to play for each monster
+      const myMonsterAnimation = THREE.AnimationClip.findByName(
+        this.myMonsterModel.animations,
+        isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
+      )
+
+      const enemyMonsterAnimation = THREE.AnimationClip.findByName(
+        this.enemyMonsterModel.animations,
+        isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
+      )
+
+      // define to play animation once
+      this.myMonsterAction && this.myMonsterAction.stop()
+      this.myMonsterAction = this.myMonsterMixer
+        .clipAction(myMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .reset()
+
+      this.enemyMonsterAction && this.enemyMonsterAction.stop()
+      this.enemyMonsterAction = this.enemyMonsterMixer
+        .clipAction(enemyMonsterAnimation)
+        .setLoop(THREE.LoopOnce)
+        .reset()
+
+      // define listener to play HitReact animation after the Attack
+      isMyMonsterAttacking
+        ? this.myMonsterMixer.addEventListener(
+          "finished",
+          this.myMonsterAttacking
+        )
+        : this.enemyMonsterMixer.addEventListener(
+          "finished",
+          this.enemyMonsterAttacking
+        )
+
+      // play Attack animation
+      isMyMonsterAttacking
+        ? this.myMonsterAction.play()
+        : this.enemyMonsterAction.play()
+
+      // defining listener to resolve promise
+      isMyMonsterAttacking
+        ? this.enemyMonsterMixer.addEventListener("finished", resolve)
+        : this.myMonsterMixer.addEventListener("finished", resolve)
+    } catch (error) {
+      reject(error)
+    }
+  })
+
+  myMonsterAttacking() {
+    this.enemyMonsterAction.play()
+    this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
+  }
+
+  enemyMonsterAttacking() {
+    this.myMonsterAction.play()
+    this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
   }
 
   render() {
