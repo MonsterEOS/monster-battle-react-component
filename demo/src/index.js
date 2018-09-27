@@ -1,10 +1,8 @@
 import React, { Component } from 'react'
 import { render } from 'react-dom'
-import { ActionType } from '../../src/utils/enums'
 import myMonster from './assets/models/Rocky.gltf'
 import enemyMonster from './assets/models/Bear.gltf'
 import Arena3D from '../../src'
-import monsterDecors from '../../src/utils/decors'
 import "./index.css"
 
 class App extends Component {
