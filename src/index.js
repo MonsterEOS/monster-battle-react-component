@@ -362,14 +362,14 @@ class Arena3D extends Component {
         this.myMonsterMixer
           .clipAction(THREE.AnimationClip.findByName(
             this.myMonsterModel.animations,
-            "Idle"
+            ActionType.IDLE
           ))
           .play()
 
         this.enemyMonsterMixer
           .clipAction(THREE.AnimationClip.findByName(
             this.enemyMonsterModel.animations,
-            "Idle"
+            ActionType.IDLE
           ))
           .play()
       },

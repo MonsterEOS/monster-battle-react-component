@@ -37,9 +37,9 @@
     "three": "^0.96.0"
   },
   "author": "VertexStudio",
-  "homepage": "https://github.com/VertexStudio/monster-profile-react-component",
+  "homepage": "https://github.com/VertexStudio/monster-battle-react-component",
   "license": "MIT",
-  "repository": "https://github.com/VertexStudio/monster-profile-react-component",
+  "repository": "https://github.com/VertexStudio/monster-battle-react-component",
   "keywords": [
     "react-component"
   ]
