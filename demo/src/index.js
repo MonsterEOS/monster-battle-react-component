@@ -20,7 +20,9 @@ class App extends Component {
     this.setState({
       attackButtonDisabled: true
     }, () => {
-      this.arena.current.changeAnimationState(from === "myMonster")
+      this.arena
+        .current
+        .changeAnimationState(from === "myMonster")
         .then(() => this.setState({ attackButtonDisabled: false }))
     })
   }
