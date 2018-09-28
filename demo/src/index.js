@@ -15,15 +15,19 @@ class App extends Component {
   }
 
   onAttack = (from) => {
+    const isMyTurn = from === "myMonster"
     this.setState({
       attackButtonDisabled: true
     }, () => {
       this.arena
         .current
-        .changeAnimationState(from === "myMonster")
-        .then(() => this.setState({ attackButtonDisabled: false }))
+        .changeAnimationState(isMyTurn)
+        .then(this.enableAttackButtons)
     })
   }
+
+  enableAttackButtons = () =>
+    this.setState({ attackButtonDisabled: false })
 
   render() {
     const { attackButtonDisabled } = this.state
@@ -43,30 +47,32 @@ class App extends Component {
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
-
-        <div className="buttons-container">
-          <div>
-            <span>My Monster</span>&nbsp;
-            <button
-              disabled={attackButtonDisabled}
-              onClick={this.onAttack.bind(null, "myMonster")}
-            >
-              Attack
-            </button>
-          </div>
-          <div>
-            <span>Enemy Monster</span> &nbsp;
-            <button
-              disabled={attackButtonDisabled}
-              onClick={this.onAttack.bind(null, "enemyMonster")}
-            >
-              Attack
-            </button>
-          </div>
-        </div>
+        {this.buttons(attackButtonDisabled)}
       </div>
     )
   }
+
+  buttons = (isDisabled) =>
+    <div className="buttons-container">
+      <div>
+        <span>My Monster</span>&nbsp;
+        <button
+          disabled={isDisabled}
+          onClick={this.onAttack.bind(null, "myMonster")}
+        >
+          Attack
+        </button>
+      </div>
+      <div>
+        <span>Enemy Monster</span> &nbsp;
+        <button
+          disabled={isDisabled}
+          onClick={this.onAttack.bind(null, "enemyMonster")}
+        >
+          Attack
+        </button>
+      </div>
+    </div>
 }
 
 render(

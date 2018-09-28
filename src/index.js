@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { ActionType } from './utils/enums'
 import * as THREE from 'three'
-import GLTFLoader from './utils/GLTFLoader'
-import OrbitControls from './utils/OrbitControls'
+import GLTFLoader from './utils/three/GLTFLoader'
+import OrbitControls from './utils/three/OrbitControls'
 import { debounce } from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
@@ -204,10 +204,10 @@ class Arena3D extends Component {
         enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
         // clipping planes
-        this.camera.near = 1500
+        this.camera.near = 1450
         this.camera.far = avgMonstersSize * 100
 
-        // distance my enemy monster from my monster
+        // distance of enemy monster from my monster
         this.enemyMonsterObject.position.z += enemyDistance
 
         // rotate in Y enemy monster by 180º
