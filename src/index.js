@@ -100,7 +100,7 @@ class Arena3D extends Component {
             this.arenaObject.position.z += 400
 
             this.arenaObject.updateMatrixWorld()
-            
+
             // loading monsters
             gltfLoader.load(
               myMonster,
@@ -355,6 +355,10 @@ class Arena3D extends Component {
         this.enemyMonsterModel.animations,
         isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
       )
+
+      if (myMonsterAnimation || enemyMonsterAnimation) {
+        resolve()
+      }
 
       // define to play animation once
       this.myMonsterAction && this.myMonsterAction.stop()
