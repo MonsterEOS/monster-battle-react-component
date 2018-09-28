@@ -16,14 +16,14 @@ class App extends Component {
 
   onAttack = (from) => {
     const isMyTurn = from === "myMonster"
-    this.setState({
-      attackButtonDisabled: true
-    }, () => {
-      this.arena
-        .current
-        .changeAnimationState(isMyTurn)
-        .then(this.enableAttackButtons)
-    })
+    this.setState(
+      { attackButtonDisabled: true },
+      () => {
+        this.arena
+          .current
+          .changeAnimationState(isMyTurn)
+          .then(this.enableAttackButtons)
+      })
   }
 
   enableAttackButtons = () =>
@@ -33,13 +33,7 @@ class App extends Component {
     const { attackButtonDisabled } = this.state
 
     return (
-      <div style={{
-        width: "100%",
-        height: "90%",
-        backgroundColor: "black",
-        position: "absolute",
-        margin: 0
-      }}>
+      <div className="arena-container">
         <Arena3D
           ref={this.arena}
           myMonster={myMonster}
@@ -64,7 +58,7 @@ class App extends Component {
         </button>
       </div>
       <div>
-        <span>Enemy Monster</span> &nbsp;
+        <span>Enemy Monster</span>&nbsp;
         <button
           disabled={isDisabled}
           onClick={this.onAttack.bind(null, "enemyMonster")}

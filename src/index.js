@@ -21,8 +21,6 @@ class Arena3D extends Component {
     )
     // used to calculate the delta between frames
     this.prevTime = 0
-    this.myMonsterAttacking = this.myMonsterAttacking.bind(this)
-    this.enemyMonsterAttacking = this.enemyMonsterAttacking.bind(this)
   }
 
   componentDidMount() {
@@ -398,12 +396,12 @@ class Arena3D extends Component {
     }
   })
 
-  myMonsterAttacking() {
+  myMonsterAttacking = () => {
     this.enemyMonsterAction.play()
     this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
   }
 
-  enemyMonsterAttacking() {
+  enemyMonsterAttacking = () => {
     this.myMonsterAction.play()
     this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
   }
