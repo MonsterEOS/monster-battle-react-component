@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { render } from 'react-dom'
-import myMonster from './assets/models/Rocky.gltf'
-import enemyMonster from './assets/models/Bear.gltf'
+import myMonster from './assets/models/bear.gltf'
+import enemyMonster from './assets/models/rocky.gltf'
 import Arena3D from '../../src'
 import "./index.css"
 

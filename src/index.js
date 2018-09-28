@@ -356,7 +356,7 @@ class Arena3D extends Component {
         isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
       )
 
-      if (myMonsterAnimation || enemyMonsterAnimation) {
+      if (!myMonsterAnimation || !enemyMonsterAnimation) {
         resolve()
       }
 
