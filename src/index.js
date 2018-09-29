@@ -8,6 +8,8 @@ import { debounce } from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
 import monsterDecors from './utils/decors'
+import TileTextureAnimator from './TileTextureAnimator'
+import neutral from './attacks/sprites/neutral.png'
 import "../css/index.css"
 
 class Arena3D extends Component {
@@ -150,8 +152,14 @@ class Arena3D extends Component {
   animate = (time) => {
     this.frameId = window.requestAnimationFrame(this.animate)
     const delta = (time - this.prevTime) / 1000
+
     this.myMonsterMixer && this.myMonsterMixer.update(delta)
     this.enemyMonsterMixer && this.enemyMonsterMixer.update(delta)
+
+    if (this.attackFXReady) {
+      this.attackFX.update(1000 * delta);
+    }
+
     this.controls.update()
     this.renderScene()
     this.prevTime = time
@@ -339,6 +347,30 @@ class Arena3D extends Component {
       },
       console.error.bind(console)
     )
+
+    const textureLoader = new THREE.TextureLoader()
+    textureLoader.load(
+      neutral,
+      spriteTexture => {
+        this.attackFX = new TileTextureAnimator(spriteTexture, 4, 5, 40)
+        const attackMaterial = new THREE.SpriteMaterial({
+          map: spriteTexture,
+          side: THREE.DoubleSide,
+          transparent: true
+        })
+        const attackPlane = new THREE.Sprite(attackMaterial)
+        attackPlane.scale.set(400, 400, 1.0)
+        attackPlane.position.set(0, 150, 0)
+        this.scene.add(attackPlane);
+        this.attackFXReady = true
+      },
+      // callback not supported
+      undefined,
+      // onError callback
+      function (error) {
+        console.error(error)
+      }
+    );
   }
 
   changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {

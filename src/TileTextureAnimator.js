@@ -37,6 +37,7 @@ class TileTextureAnimator {
 
         while (this.currentTime > this.durationTile) {
             this.currentTime -= this.durationTile
+            
             // move to next tile
             this.currentTile++
 
@@ -51,7 +52,7 @@ class TileTextureAnimator {
 
             // offset texture on `y`
             const row = Math.floor(this.currentTile / this.hTiles)
-            this.texture.offset.y = row / this.vTiles
+            this.texture.offset.y = row / this.vTiles    
         }
     }
 }

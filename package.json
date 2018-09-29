@@ -9,8 +9,7 @@
     "es",
     "lib",
     "models",
-    "shaders",
-    "attacks"
+    "shaders"
   ],
   "scripts": {
     "prepare": "npm run build",
