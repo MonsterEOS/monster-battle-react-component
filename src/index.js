@@ -1,15 +1,15 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { ActionType } from './utils/enums'
+import { ActionType, AttackType } from './utils/enums'
 import * as THREE from 'three'
 import GLTFLoader from './utils/three/GLTFLoader'
 import OrbitControls from './utils/three/OrbitControls'
-import { debounce } from './utils'
+import { debounce, applyShader } from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
 import monsterDecors from './utils/decors'
 import TileTextureAnimator from './TileTextureAnimator'
-import neutral from './attacks/sprites/neutral.png'
+import attacks from './attacks'
 import "../css/index.css"
 
 class Arena3D extends Component {
@@ -23,6 +23,21 @@ class Arena3D extends Component {
     )
     // used to calculate the delta between frames
     this.prevTime = 0
+  }
+
+  render() {
+    const { size, customStyles } = this.props
+
+    return (
+      <div
+        style={{
+          width: size.width,
+          height: size.height,
+          ...customStyles
+        }}
+        ref={this.setMountNodeRef}
+      />
+    )
   }
 
   componentDidMount() {
@@ -82,39 +97,34 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    VertexStudioMaterial()
-      .then(VertexStudioMaterial => {
-        this.monsterMaterial = VertexStudioMaterial
+    // GLTF loader
+    const gltfLoader = new GLTFLoader()
 
-        // GLTF loader
-        const gltfLoader = new GLTFLoader()
+    // loading Arena environment
+    gltfLoader.load(
+      Arena,
+      arenaGltf => {
+        this.arenaModel = arenaGltf
+        this.arenaObject = this.arenaModel.scene
+        this.arenaObject.scale.set(1.5, 1.5, 1.5)
+        this.arenaObject.position.y += -70
+        this.arenaObject.position.z += 400
 
-        // loading Arena environment
+        this.arenaObject.updateMatrixWorld()
+
+        // loading monsters
         gltfLoader.load(
-          Arena,
-          arenaGltf => {
-            this.arenaModel = arenaGltf
-            this.arenaObject = this.arenaModel.scene
-            this.arenaObject.scale.set(1.5, 1.5, 1.5)
-            this.arenaObject.position.y += -70
-            this.arenaObject.position.z += 400
-
-            this.arenaObject.updateMatrixWorld()
-
-            // loading monsters
-            gltfLoader.load(
-              myMonster,
-              this.loadMonsters,
-              // TODO: add a loader.
-              event => {
-                const percentage = (event.loaded / event.total) * 100
-                console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
-              },
-              console.error.bind(console)
-            )
-          }
+          myMonster,
+          this.loadMonsters,
+          // TODO: add a loader.
+          event => {
+            const percentage = (event.loaded / event.total) * 100
+            console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
+          },
+          console.error.bind(console)
         )
-      })
+      }
+    )
 
     // start scene
     this.start()
@@ -131,13 +141,15 @@ class Arena3D extends Component {
   shouldComponentUpdate(nextProps) {
     return (
       this.props.myMonsterCurrentAction !== nextProps.myMonsterCurrentAction ||
-      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction
+      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction ||
+      this.props.myMonsterAttack !== nextProps.myMonsterAttack ||
+      this.props.enemyMonsterAttack !== nextProps.enemyMonsterAttack
     )
   }
 
   start = () => {
     if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate)
+      this.frameId = window.requestAnimationFrame(this.animate)
     }
   }
 
@@ -223,78 +235,19 @@ class Arena3D extends Component {
         this.myMonsterObject.updateMatrixWorld()
         this.enemyMonsterObject.updateMatrixWorld()
 
-        // applying shaders to both monsters
-        this.myMonsterObject.traverse(child => {
-          if (child.isMesh) {
-            if (child.material[0]) {
-              child.material.forEach((material, idx) => {
-                if (material.map) {
-                  child.material[idx] = this.monsterMaterial(
-                    material.map,
-                    this.props.myMonsterDecor
-                  )
-                }
-              })
-            }
-            else {
-              if (child.material.map) {
-                child.material = this.monsterMaterial(
-                  child.material.map,
-                  this.props.myMonsterDecor
-                )
-              }
-            }
-          }
-        })
+        // loading VertexStudioMaterial
+        VertexStudioMaterial()
+          .then(VertexStudioMaterial => {
 
-        this.enemyMonsterObject.traverse(child => {
-          if (child.isMesh) {
-            if (child.material[0]) {
-              child.material.forEach((material, idx) => {
-                if (material.map) {
-                  child.material[idx] = this.monsterMaterial(
-                    material.map,
-                    this.props.enemyMonsterDecor
-                  )
-                }
-              })
-            }
-            else {
-              if (child.material.map) {
-                child.material = this.monsterMaterial(
-                  child.material.map,
-                  this.props.enemyMonsterDecor
-                )
-              }
-            }
-          }
-        })
+            // applying shaders to both monsters
+            applyShader(this.myMonsterObject, VertexStudioMaterial, this.props.myMonsterDecor)
+            applyShader(this.enemyMonsterObject, VertexStudioMaterial, this.props.enemyMonsterDecor)
 
-        // applying shaders to coliseum
-        if (this.props.coliseumDecor) {
-          this.arenaObject.traverse(child => {
-            if (child.isMesh) {
-              if (child.material[0]) {
-                child.material.forEach((material, idx) => {
-                  if (material.map) {
-                    child.material[idx] = this.monsterMaterial(
-                      material.map,
-                      this.props.coliseumDecor
-                    )
-                  }
-                })
-              }
-              else {
-                if (child.material.map) {
-                  child.material = this.monsterMaterial(
-                    child.material.map,
-                    this.props.coliseumDecor
-                  )
-                }
-              }
+            // applying shaders to coliseum
+            if (this.props.coliseumDecor) {
+              applyShader(this.arenaObject, VertexStudioMaterial, this.props.coliseumDecor)
             }
           })
-        }
 
         // add to scene
         this.scene.add(this.myMonsterObject)
@@ -347,13 +300,22 @@ class Arena3D extends Component {
       },
       console.error.bind(console)
     )
+  }
+
+  playAttackFX = () => {
+    const attack = attacks(this.props.myMonsterAttack)
 
     // playing attacks FX
     const textureLoader = new THREE.TextureLoader()
     textureLoader.load(
-      neutral,
+      attack.src,
       spriteTexture => {
-        this.attackFX = new TileTextureAnimator(spriteTexture, 4, 5, 40)
+        this.attackFX = new TileTextureAnimator(
+          spriteTexture,
+          attack.hTiles,
+          attack.vTiles,
+          attack.durationTile
+        )
         const attackMaterial = new THREE.SpriteMaterial({
           map: spriteTexture,
           side: THREE.DoubleSide,
@@ -371,7 +333,7 @@ class Arena3D extends Component {
       function (error) {
         console.error(error)
       }
-    );
+    )
   }
 
   changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {
@@ -438,19 +400,17 @@ class Arena3D extends Component {
     this.myMonsterAction.play()
     this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
   }
+}
 
-  render() {
-    const { size, customStyles } = this.props
-
-    return (
-      <div
-        style={{
-          width: size.width,
-          height: size.height,
-          ...customStyles
-        }}
-        ref={this.setMountNodeRef}
-      />
+function monsterAttackValidation(props, propName, componentName) {
+  const validActions = Object.keys(AttackType).map(
+    key => AttackType[key]
+  )
+  if (!validActions.includes(props[propName])) {
+    return new Error(
+      `Invalid ${propName} supplied to ${componentName}. ` +
+      `Use the AttackType enum to supply a valid value. ` +
+      `Valid values are: ${validActions.join(", ")}.`
     )
   }
 }
@@ -458,6 +418,8 @@ class Arena3D extends Component {
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
   enemyMonster: PropTypes.string.isRequired,
+  myMonsterAttack: monsterAttackValidation,
+  enemyMonsterAttack: monsterAttackValidation,
   myMonsterDecor: PropTypes.object,
   enemyMonsterDecor: PropTypes.object,
   coliseumDecor: PropTypes.object,
@@ -485,6 +447,8 @@ Arena3D.propTypes = {
 Arena3D.defaultProps = {
   myMonsterDecor: monsterDecors.neutral,
   enemyMonsterDecor: monsterDecors.neutral,
+  myMonsterAttack: AttackType.NEUTRAL,
+  enemyMonsterAttack: AttackType.NEUTRAL,
   coliseumDecor: undefined,
   cameraDistance: 1700,
   cameraRotation: -175,

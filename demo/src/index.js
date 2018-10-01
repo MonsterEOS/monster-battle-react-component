@@ -27,14 +27,20 @@ class App extends Component {
   }
 
   render() {
-    const { attackButtonDisabled } = this.state
+    const {
+      attackButtonDisabled,
+      myMonster: { attackType: myMonsterAttack },
+      enemyMonster: { attackType: enemyMonsterAttack },
+    } = this.state
 
     return (
       <div className="arena-container">
         <Arena3D
           ref={this.arena}
           myMonster={myMonster}
+          myMonsterAttack={myMonsterAttack}
           enemyMonster={enemyMonster}
+          enemyMonsterAttack={enemyMonsterAttack}
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
@@ -57,10 +63,12 @@ class App extends Component {
       })
   }
 
-  onAttackTypeChange = (event) => {
+  onAttackTypeChange = event => {
     this.setState({
       ...this.state,
-      [event.target.name]: event.target.value
+      [event.target.name]: {
+        attackType: event.target.value
+      }
     })
   }
 

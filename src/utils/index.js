@@ -16,3 +16,35 @@ export const debounce = (ms = 500) => f => {
         )
     }
 }
+
+/**
+ * Applies a shader to the 3D model.
+ * 
+ * @param {Object} object3D 3D object model loaded.
+ * @param {Object} shader Shader to apply to the material.
+ * @param {Object} decor Parameters to configure the shader.
+ */
+export const applyShader = (object3D, shader, decor) => {
+    object3D.traverse(child => {
+        if (child.isMesh) {
+            if (child.material[0]) {
+                child.material.forEach((material, idx) => {
+                    if (material.map) {
+                        child.material[idx] = shader(
+                            material.map,
+                            decor
+                        )
+                    }
+                })
+            }
+            else {
+                if (child.material.map) {
+                    child.material = shader(
+                        child.material.map,
+                        decor
+                    )
+                }
+            }
+        }
+    })
+}
