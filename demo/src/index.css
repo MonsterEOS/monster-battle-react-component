@@ -12,5 +12,17 @@ body {
 
 .buttons-container {
     display: flex;
-    justify-content: space-around
+    justify-content: space-around;
+}
+
+.buttons-container * {
+    margin: 5px;
+}
+
+.attack {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    text-align: center;
+    text-align-last: center;
 }

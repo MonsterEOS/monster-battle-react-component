@@ -348,6 +348,7 @@ class Arena3D extends Component {
       console.error.bind(console)
     )
 
+    // playing attacks FX
     const textureLoader = new THREE.TextureLoader()
     textureLoader.load(
       neutral,
@@ -364,7 +365,7 @@ class Arena3D extends Component {
         this.scene.add(attackPlane);
         this.attackFXReady = true
       },
-      // callback not supported
+      // callback not supported for texture loader
       undefined,
       // onError callback
       function (error) {
