@@ -205,13 +205,13 @@ class Arena3D extends Component {
 
     // 3D boxes from monsters to get a size from each
     const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
-    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
+    this.myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
     const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
-    const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
+    this.enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
 
     // monsters average size
-    const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
+    const avgMonstersSize = (this.myMonsterSize + this.enemyMonsterSize) / 2
 
     // Grid helper
     enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
@@ -255,16 +255,16 @@ class Arena3D extends Component {
     const rotationAngle = cameraRotation * (Math.PI / 180)
 
     const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-    this.baseCameratranslation = new THREE.Matrix4()
+    const baseCameratranslation = new THREE.Matrix4()
       .makeTranslation(0, cameraHeight, cameraDistance)
 
-    const transform = rotationY.multiply(this.baseCameratranslation)
+    const transform = rotationY.multiply(baseCameratranslation)
 
     const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
 
     const finalTransform = rotationX.multiply(transform)
 
-    // Apply the matrix of transformations
+    // apply the matrix of transformations
     this.camera.applyMatrix(finalTransform)
 
     // update camera parameters
@@ -314,68 +314,69 @@ class Arena3D extends Component {
     return attackFxPlane
   }
 
-  changeAnimationState = (isMyMonsterAttacking, attackType) => new Promise((resolve, reject) => {
-    try {
-      // define animation clip to be played for each monster
-      const myMonsterAnimation = THREE.AnimationClip.findByName(
-        this.myMonsterModel.animations,
-        isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
-      )
+  playAttackAnimation = (isMyMonsterAttacking, attackType = AttackType.NEUTRAL) =>
+    new Promise((resolve, reject) => {
+      try {
+        // define animation clip to be played for each monster
+        const myMonsterAnimation = THREE.AnimationClip.findByName(
+          this.myMonsterModel.animations,
+          isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
+        )
 
-      const enemyMonsterAnimation = THREE.AnimationClip.findByName(
-        this.enemyMonsterModel.animations,
-        isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
-      )
+        const enemyMonsterAnimation = THREE.AnimationClip.findByName(
+          this.enemyMonsterModel.animations,
+          isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
+        )
 
-      // if any of the monsters lacks Attack or HitReact animation,
-      // resolve inmediatly, leaving them at Idle state only.
-      if (!myMonsterAnimation || !enemyMonsterAnimation) {
-        resolve()
+        // if any of the monsters lacks Attack or HitReact animation,
+        // resolve inmediatly, leaving them at Idle state only.
+        if (!myMonsterAnimation || !enemyMonsterAnimation) {
+          resolve()
+        }
+
+        this.getAttackFX(attackType, 2)
+          .then(attackFxPlane => {
+            this.scene.add(attackFxPlane)
+            this.attackFXReady = true
+          })
+
+        // define to play animations once
+        this.myMonsterAction && this.myMonsterAction.stop()
+        this.myMonsterAction = this.myMonsterMixer
+          .clipAction(myMonsterAnimation)
+          .setLoop(THREE.LoopOnce)
+          .reset()
+
+        this.enemyMonsterAction && this.enemyMonsterAction.stop()
+        this.enemyMonsterAction = this.enemyMonsterMixer
+          .clipAction(enemyMonsterAnimation)
+          .setLoop(THREE.LoopOnce)
+          .reset()
+
+        // define listener to play HitReact animation after the Attack
+        isMyMonsterAttacking
+          ? this.myMonsterMixer.addEventListener(
+            "finished",
+            this.myMonsterAttacking
+          )
+          : this.enemyMonsterMixer.addEventListener(
+            "finished",
+            this.enemyMonsterAttacking
+          )
+
+        // play Attack animation
+        isMyMonsterAttacking
+          ? this.myMonsterAction.play()
+          : this.enemyMonsterAction.play()
+
+        // defining listener to resolve promise
+        isMyMonsterAttacking
+          ? this.enemyMonsterMixer.addEventListener("finished", resolve)
+          : this.myMonsterMixer.addEventListener("finished", resolve)
+      } catch (error) {
+        reject(error)
       }
-
-      this.getAttackFX(attackType, 2)
-        .then(attackFxPlane => {
-          this.scene.add(attackFxPlane)
-          this.attackFXReady = true
-        })
-
-      // define to play animations once
-      this.myMonsterAction && this.myMonsterAction.stop()
-      this.myMonsterAction = this.myMonsterMixer
-        .clipAction(myMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-
-      this.enemyMonsterAction && this.enemyMonsterAction.stop()
-      this.enemyMonsterAction = this.enemyMonsterMixer
-        .clipAction(enemyMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-
-      // define listener to play HitReact animation after the Attack
-      isMyMonsterAttacking
-        ? this.myMonsterMixer.addEventListener(
-          "finished",
-          this.myMonsterAttacking
-        )
-        : this.enemyMonsterMixer.addEventListener(
-          "finished",
-          this.enemyMonsterAttacking
-        )
-
-      // play Attack animation
-      isMyMonsterAttacking
-        ? this.myMonsterAction.play()
-        : this.enemyMonsterAction.play()
-
-      // defining listener to resolve promise
-      isMyMonsterAttacking
-        ? this.enemyMonsterMixer.addEventListener("finished", resolve)
-        : this.myMonsterMixer.addEventListener("finished", resolve)
-    } catch (error) {
-      reject(error)
-    }
-  })
+    })
 
   myMonsterAttacking = () => {
     this.enemyMonsterAction.play()

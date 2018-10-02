@@ -52,7 +52,7 @@ class App extends Component {
       { ...this.state, attackButtonDisabled: true },
       () => {
         this.arena.current
-          .changeAnimationState(
+          .playAttackAnimation(
             isMyTurn,
             this.state[from].attackType
           )
