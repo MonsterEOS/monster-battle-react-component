@@ -27,11 +27,7 @@ class App extends Component {
   }
 
   render() {
-    const {
-      attackButtonDisabled,
-      myMonster: { attackType: myMonsterAttack },
-      enemyMonster: { attackType: enemyMonsterAttack },
-    } = this.state
+    const { attackButtonDisabled } = this.state
 
     return (
       <div className="arena-container">
@@ -39,8 +35,6 @@ class App extends Component {
           ref={this.arena}
           myMonster={myMonster}
           enemyMonster={enemyMonster}
-          enemyMonsterAttack={enemyMonsterAttack}
-          myMonsterAttack={myMonsterAttack}
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
@@ -58,7 +52,10 @@ class App extends Component {
       { ...this.state, attackButtonDisabled: true },
       () => {
         this.arena.current
-          .changeAnimationState(isMyTurn)
+          .changeAnimationState(
+            isMyTurn,
+            this.state[from].attackType
+          )
           .then(this.enableAttackButtons)
       })
   }

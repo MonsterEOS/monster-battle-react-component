@@ -1,4 +1,3 @@
-import * as THREE from 'three'
 import { AttackType } from '../utils/enums'
 import animal from '../attacks/sprites/animal.png'
 import earth from '../attacks/sprites/earth.png'
@@ -67,7 +66,7 @@ export default type => {
                 src: undead,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 40
+                durationTile: 60
             }
         case AttackType.WATER:
             return {
@@ -87,7 +86,7 @@ export default type => {
             return {
                 src: neutral,
                 hTiles: 4,
-                vTiles: 4,
+                vTiles: 5,
                 durationTile: 40
             }
     }

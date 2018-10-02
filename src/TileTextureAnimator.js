@@ -1,15 +1,21 @@
 import * as THREE from 'three'
 
 class TileTextureAnimator {
-    constructor(texture, hTiles, vTiles, durationTile) {
+    constructor(texture, hTiles, vTiles, durationTile, repeat = 1) {
         // current tile number
         this.currentTile = 0
 
         // internal time counter
         this.currentTime = 0
 
-        //duration of every tile
+        // duration of every tile
         this.durationTile = durationTile
+
+        // how many times to repeat the animation
+        this.repeat = repeat
+
+        // internal repetitions counter
+        this.repeatCount = 0
 
         // amount of horizontal and vertical tiles
         this.hTiles = hTiles
@@ -35,15 +41,19 @@ class TileTextureAnimator {
     update(time) {
         this.currentTime += time
 
-        while (this.currentTime > this.durationTile) {
+        while (
+            this.currentTime > this.durationTile &&
+            this.repeat > this.repeatCount
+        ) {
             this.currentTime -= this.durationTile
-            
+
             // move to next tile
             this.currentTile++
 
-            // start again
+            // start a new repetition
             if (this.currentTile === this.totalTiles) {
                 this.currentTile = 0
+                this.repeatCount++
             }
 
             // offset texture on `x`
@@ -52,7 +62,7 @@ class TileTextureAnimator {
 
             // offset texture on `y`
             const row = Math.floor(this.currentTile / this.hTiles)
-            this.texture.offset.y = row / this.vTiles    
+            this.texture.offset.y = row / this.vTiles
         }
     }
 }

@@ -3,7 +3,12 @@ import PropTypes from 'prop-types'
 import { ActionType, AttackType } from './utils/enums'
 import * as THREE from 'three'
 import OrbitControls from './utils/three/OrbitControls'
-import { debounce, applyShader, gltfAssetLoader } from './utils'
+import {
+  debounce,
+  applyShader,
+  gltfAssetLoader,
+  textureAssetLoader
+} from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
 import monsterDecors from './utils/decors'
@@ -125,9 +130,7 @@ class Arena3D extends Component {
   shouldComponentUpdate(nextProps) {
     return (
       this.props.myMonsterCurrentAction !== nextProps.myMonsterCurrentAction ||
-      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction ||
-      this.props.myMonsterAttack !== nextProps.myMonsterAttack ||
-      this.props.enemyMonsterAttack !== nextProps.enemyMonsterAttack
+      this.props.enemyMonsterCurrentAction !== nextProps.enemyMonsterCurrentAction
     )
   }
 
@@ -180,6 +183,8 @@ class Arena3D extends Component {
     this.arenaObject.position.z += 400
 
     this.arenaObject.updateMatrixWorld()
+
+    this.scene.add(this.arenaObject)
   }
 
   configMonsters = async (myMonsterGltf, enemyMonsterGltf) => {
@@ -240,7 +245,6 @@ class Arena3D extends Component {
     // add to scene
     this.scene.add(this.myMonsterObject)
     this.scene.add(this.enemyMonsterObject)
-    this.scene.add(this.arenaObject)
 
     // define animation mixers
     this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
@@ -282,41 +286,37 @@ class Arena3D extends Component {
       .play()
   }
 
-  playAttackFX = () => {
-    const attack = attacks(this.props.myMonsterAttack)
+  getAttackFX = async (attackType, repetitions) => {
+    const attack = attacks(attackType)
 
-    // playing attacks FX
-    const textureLoader = new THREE.TextureLoader()
-    textureLoader.load(
-      attack.src,
-      spriteTexture => {
-        this.attackFX = new TileTextureAnimator(
-          spriteTexture,
-          attack.hTiles,
-          attack.vTiles,
-          attack.durationTile
-        )
-        const attackMaterial = new THREE.SpriteMaterial({
-          map: spriteTexture,
-          side: THREE.DoubleSide,
-          transparent: true
-        })
-        const attackPlane = new THREE.Sprite(attackMaterial)
-        attackPlane.scale.set(400, 400, 1.0)
-        attackPlane.position.set(0, 150, 0)
-        this.scene.add(attackPlane);
-        this.attackFXReady = true
-      },
-      // callback not supported for texture loader
-      undefined,
-      // onError callback
-      console.error.bind(console)
+    const spriteTexture = await textureAssetLoader(attack.src)
+
+    this.attackFX = new TileTextureAnimator(
+      spriteTexture,
+      attack.hTiles,
+      attack.vTiles,
+      attack.durationTile,
+      repetitions
     )
+
+    // material with the loaded texture
+    const attackFxMaterial = new THREE.SpriteMaterial({
+      map: spriteTexture,
+      side: THREE.DoubleSide,
+      transparent: true
+    })
+
+    // plane that is always pointing toward the camera
+    const attackFxPlane = new THREE.Sprite(attackFxMaterial)
+    attackFxPlane.scale.set(400, 400, 1.0)
+    attackFxPlane.position.set(0, 150, 0)
+
+    return attackFxPlane
   }
 
-  changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {
+  changeAnimationState = (isMyMonsterAttacking, attackType) => new Promise((resolve, reject) => {
     try {
-      // define animation clip to play for each monster
+      // define animation clip to be played for each monster
       const myMonsterAnimation = THREE.AnimationClip.findByName(
         this.myMonsterModel.animations,
         isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
@@ -327,11 +327,19 @@ class Arena3D extends Component {
         isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
       )
 
+      // if any of the monsters lacks Attack or HitReact animation,
+      // resolve inmediatly, leaving them at Idle state only.
       if (!myMonsterAnimation || !enemyMonsterAnimation) {
         resolve()
       }
 
-      // define to play animation once
+      this.getAttackFX(attackType, 2)
+        .then(attackFxPlane => {
+          this.scene.add(attackFxPlane)
+          this.attackFXReady = true
+        })
+
+      // define to play animations once
       this.myMonsterAction && this.myMonsterAction.stop()
       this.myMonsterAction = this.myMonsterMixer
         .clipAction(myMonsterAnimation)
@@ -380,24 +388,9 @@ class Arena3D extends Component {
   }
 }
 
-function monsterAttackValidation(props, propName, componentName) {
-  const validActions = Object.keys(AttackType).map(
-    key => AttackType[key]
-  )
-  if (!validActions.includes(props[propName])) {
-    return new Error(
-      `Invalid ${propName} supplied to ${componentName}. ` +
-      `Use the AttackType enum to supply a valid value. ` +
-      `Valid values are: ${validActions.join(", ")}.`
-    )
-  }
-}
-
 Arena3D.propTypes = {
   myMonster: PropTypes.string.isRequired,
   enemyMonster: PropTypes.string.isRequired,
-  myMonsterAttack: monsterAttackValidation,
-  enemyMonsterAttack: monsterAttackValidation,
   myMonsterDecor: PropTypes.object,
   enemyMonsterDecor: PropTypes.object,
   coliseumDecor: PropTypes.object,
@@ -425,8 +418,6 @@ Arena3D.propTypes = {
 Arena3D.defaultProps = {
   myMonsterDecor: monsterDecors.neutral,
   enemyMonsterDecor: monsterDecors.neutral,
-  myMonsterAttack: AttackType.NEUTRAL,
-  enemyMonsterAttack: AttackType.NEUTRAL,
   coliseumDecor: undefined,
   cameraDistance: 1700,
   cameraRotation: -175,

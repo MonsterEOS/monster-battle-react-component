@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import GLTFLoader from './three/GLTFLoader'
 
 /**
@@ -56,15 +57,30 @@ export const applyShader = (object3D, shader, decor) => {
  * 
  * @param {String} path Path to the .gltf file.
  */
-export const gltfAssetLoader = (path) => new Promise((response, reject) => {
+export const gltfAssetLoader = path => new Promise((resolve, reject) => {
     const gltfLoader = new GLTFLoader()
     gltfLoader.load(
         path,
-        response,
+        resolve,
         event => {
             const percentage = (event.loaded / event.total) * 100
             console.log(`Loading 3D model... ${Math.round(percentage)}%`)
         },
+        reject
+    )
+})
+
+/**
+ * Loads an image as a texture.
+ * 
+ * @param {String} path Path to image file.
+ */
+export const textureAssetLoader = path => new Promise((resolve, reject) => {
+    const textureLoader = new THREE.TextureLoader()
+    textureLoader.load(
+        path,
+        resolve,
+        undefined, // onProgress callback is not supported
         reject
     )
 })
