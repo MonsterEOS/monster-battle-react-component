@@ -2,9 +2,8 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { ActionType, AttackType } from './utils/enums'
 import * as THREE from 'three'
-import GLTFLoader from './utils/three/GLTFLoader'
 import OrbitControls from './utils/three/OrbitControls'
-import { debounce, applyShader } from './utils'
+import { debounce, applyShader, gltfAssetLoader } from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
 import monsterDecors from './utils/decors'
@@ -40,10 +39,11 @@ class Arena3D extends Component {
     )
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     const {
       background,
       myMonster,
+      enemyMonster,
       exposure,
       ambientIntensity,
       ambientColor,
@@ -97,34 +97,14 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    // GLTF loader
-    const gltfLoader = new GLTFLoader()
+    // load Arena 3D model
+    const arenaGltf = await gltfAssetLoader(Arena)
+    this.loadArena(arenaGltf)
 
-    // loading Arena environment
-    gltfLoader.load(
-      Arena,
-      arenaGltf => {
-        this.arenaModel = arenaGltf
-        this.arenaObject = this.arenaModel.scene
-        this.arenaObject.scale.set(1.5, 1.5, 1.5)
-        this.arenaObject.position.y += -70
-        this.arenaObject.position.z += 400
-
-        this.arenaObject.updateMatrixWorld()
-
-        // loading monsters
-        gltfLoader.load(
-          myMonster,
-          this.loadMonsters,
-          // TODO: add a loader.
-          event => {
-            const percentage = (event.loaded / event.total) * 100
-            console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
-          },
-          console.error.bind(console)
-        )
-      }
-    )
+    // load monsters 3D models
+    const myMonsterGltf = await gltfAssetLoader(myMonster)
+    const enemyMonsterGltf = await gltfAssetLoader(enemyMonster)
+    this.loadMonsters(myMonsterGltf, enemyMonsterGltf)
 
     // start scene
     this.start()
@@ -188,15 +168,18 @@ class Arena3D extends Component {
     }
   })
 
-  loadMonsters = myGltf => {
-    this.myMonsterModel = myGltf
-    this.myMonsterObject = this.myMonsterModel.scene
+  loadArena = gltf => {
+    this.arenaModel = gltf
+    this.arenaObject = this.arenaModel.scene
+    this.arenaObject.scale.set(1.5, 1.5, 1.5)
+    this.arenaObject.position.y += -70
+    this.arenaObject.position.z += 400
 
-    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
-    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
+    this.arenaObject.updateMatrixWorld()
+  }
 
+  loadMonsters = async (myMonsterGltf, enemyMonsterGltf) => {
     const {
-      enemyMonster,
       cameraDistance,
       cameraRotation,
       cameraHeight,
@@ -205,101 +188,92 @@ class Arena3D extends Component {
       enemyDistance
     } = this.props
 
-    // loading enemyMonster with GLTF loader
-    const gltfLoader = new GLTFLoader()
-    gltfLoader.load(
-      enemyMonster,
-      enemyGltf => {
-        this.enemyMonsterModel = enemyGltf
-        this.enemyMonsterObject = this.enemyMonsterModel.scene
+    this.myMonsterModel = myMonsterGltf
+    this.myMonsterObject = this.myMonsterModel.scene
 
-        const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
-        const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
+    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
+    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
-        const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
+    this.enemyMonsterModel = enemyMonsterGltf
+    this.enemyMonsterObject = this.enemyMonsterModel.scene
 
-        // Grid helper
-        enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
+    const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
+    const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
 
-        // clipping planes
-        this.camera.near = 1450
-        this.camera.far = avgMonstersSize * 100
+    const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
 
-        // distance of enemy monster from my monster
-        this.enemyMonsterObject.position.z += enemyDistance
+    // Grid helper
+    enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
-        // rotate in Y enemy monster by 180º
-        this.enemyMonsterObject.rotation.y = Math.PI
+    // clipping planes
+    this.camera.near = 1450
+    this.camera.far = avgMonstersSize * 100
 
-        // updates global transform of the monsters
-        this.myMonsterObject.updateMatrixWorld()
-        this.enemyMonsterObject.updateMatrixWorld()
+    // distance of enemy monster from my monster
+    this.enemyMonsterObject.position.z += enemyDistance
 
-        // loading VertexStudioMaterial
-        VertexStudioMaterial()
-          .then(VertexStudioMaterial => {
+    // rotate in Y enemy monster by 180º
+    this.enemyMonsterObject.rotation.y = Math.PI
 
-            // applying shaders to both monsters
-            applyShader(this.myMonsterObject, VertexStudioMaterial, this.props.myMonsterDecor)
-            applyShader(this.enemyMonsterObject, VertexStudioMaterial, this.props.enemyMonsterDecor)
+    // updates global transform of the monsters
+    this.myMonsterObject.updateMatrixWorld()
+    this.enemyMonsterObject.updateMatrixWorld()
 
-            // applying shaders to coliseum
-            if (this.props.coliseumDecor) {
-              applyShader(this.arenaObject, VertexStudioMaterial, this.props.coliseumDecor)
-            }
-          })
+    // loading VertexStudioMaterial
+    const vertexStudioMaterial = await VertexStudioMaterial()
 
-        // add to scene
-        this.scene.add(this.myMonsterObject)
-        this.scene.add(this.enemyMonsterObject)
-        this.scene.add(this.arenaObject)
+    // applying shaders to both monsters
+    applyShader(this.myMonsterObject, vertexStudioMaterial, this.props.myMonsterDecor)
+    applyShader(this.enemyMonsterObject, vertexStudioMaterial, this.props.enemyMonsterDecor)
 
-        // define animation mixers
-        this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
-        this.enemyMonsterMixer = new THREE.AnimationMixer(this.enemyMonsterObject)
+    // applying shaders to coliseum
+    if (this.props.coliseumDecor) {
+      applyShader(this.arenaObject, vertexStudioMaterial, this.props.coliseumDecor)
+    }
 
-        // set camera initial position
+    // add to scene
+    this.scene.add(this.myMonsterObject)
+    this.scene.add(this.enemyMonsterObject)
+    this.scene.add(this.arenaObject)
 
-        const rotationAngle = cameraRotation * (Math.PI / 180)
+    // define animation mixers
+    this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
+    this.enemyMonsterMixer = new THREE.AnimationMixer(this.enemyMonsterObject)
 
-        const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-        this.baseCameratranslation = new THREE.Matrix4().makeTranslation(
-          0, cameraHeight, cameraDistance
-        )
-        const transform = rotationY.multiply(this.baseCameratranslation)
+    // set camera initial position
 
-        const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
+    const rotationAngle = cameraRotation * (Math.PI / 180)
 
-        const finalTransform = rotationX.multiply(transform)
-
-        // Apply the matrix of transformations
-        this.camera.applyMatrix(finalTransform)
-
-        // update camera parameters
-        this.camera.updateProjectionMatrix()
-
-        // start idle animations
-        this.myMonsterMixer
-          .clipAction(THREE.AnimationClip.findByName(
-            this.myMonsterModel.animations,
-            ActionType.IDLE
-          ))
-          .play()
-
-        this.enemyMonsterMixer
-          .clipAction(THREE.AnimationClip.findByName(
-            this.enemyMonsterModel.animations,
-            ActionType.IDLE
-          ))
-          .play()
-      },
-      // TODO: add a loader.
-      event => {
-        const percentage = (event.loaded / event.total) * 100
-        console.log(`Loading my enemy monster 3D model... ${Math.round(percentage)}%`)
-      },
-      console.error.bind(console)
+    const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
+    this.baseCameratranslation = new THREE.Matrix4().makeTranslation(
+      0, cameraHeight, cameraDistance
     )
+    const transform = rotationY.multiply(this.baseCameratranslation)
+
+    const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
+
+    const finalTransform = rotationX.multiply(transform)
+
+    // Apply the matrix of transformations
+    this.camera.applyMatrix(finalTransform)
+
+    // update camera parameters
+    this.camera.updateProjectionMatrix()
+
+    // start idle animations
+    this.myMonsterMixer
+      .clipAction(THREE.AnimationClip.findByName(
+        this.myMonsterModel.animations,
+        ActionType.IDLE
+      ))
+      .play()
+
+    this.enemyMonsterMixer
+      .clipAction(THREE.AnimationClip.findByName(
+        this.enemyMonsterModel.animations,
+        ActionType.IDLE
+      ))
+      .play()
   }
 
   playAttackFX = () => {

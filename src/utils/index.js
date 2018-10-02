@@ -1,3 +1,5 @@
+import GLTFLoader from './three/GLTFLoader'
+
 /**
  * Returns a function that will be invoked until the timeout is over.
  * This timeout restarts evertime the function gets invoked before
@@ -48,3 +50,21 @@ export const applyShader = (object3D, shader, decor) => {
         }
     })
 }
+
+/**
+ * Loads GLTF files.
+ * 
+ * @param {String} path Path to the .gltf file.
+ */
+export const gltfAssetLoader = (path) => new Promise((response, reject) => {
+    const gltfLoader = new GLTFLoader()
+    gltfLoader.load(
+        path,
+        response,
+        event => {
+            const percentage = (event.loaded / event.total) * 100
+            console.log(`Loading 3D model... ${Math.round(percentage)}%`)
+        },
+        reject
+    )
+})

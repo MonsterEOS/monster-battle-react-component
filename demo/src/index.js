@@ -38,9 +38,9 @@ class App extends Component {
         <Arena3D
           ref={this.arena}
           myMonster={myMonster}
-          myMonsterAttack={myMonsterAttack}
           enemyMonster={enemyMonster}
           enemyMonsterAttack={enemyMonsterAttack}
+          myMonsterAttack={myMonsterAttack}
           size={{ width: "100%", height: "100%" }}
           background={{ alpha: 1 }}
         />
