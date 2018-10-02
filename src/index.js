@@ -97,14 +97,18 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    // load Arena 3D model
-    const arenaGltf = await gltfAssetLoader(Arena)
-    this.loadArena(arenaGltf)
+    try {
 
-    // load monsters 3D models
-    const myMonsterGltf = await gltfAssetLoader(myMonster)
-    const enemyMonsterGltf = await gltfAssetLoader(enemyMonster)
-    this.loadMonsters(myMonsterGltf, enemyMonsterGltf)
+      // load Arena 3D model
+      const arenaGltf = await gltfAssetLoader(Arena)
+      this.configArena(arenaGltf)
+
+      // load monsters 3D models
+      const myMonsterGltf = await gltfAssetLoader(myMonster)
+      const enemyMonsterGltf = await gltfAssetLoader(enemyMonster)
+      this.configMonsters(myMonsterGltf, enemyMonsterGltf)
+
+    } catch (error) { console.error(error) }
 
     // start scene
     this.start()
@@ -168,7 +172,7 @@ class Arena3D extends Component {
     }
   })
 
-  loadArena = gltf => {
+  configArena = gltf => {
     this.arenaModel = gltf
     this.arenaObject = this.arenaModel.scene
     this.arenaObject.scale.set(1.5, 1.5, 1.5)
@@ -178,7 +182,7 @@ class Arena3D extends Component {
     this.arenaObject.updateMatrixWorld()
   }
 
-  loadMonsters = async (myMonsterGltf, enemyMonsterGltf) => {
+  configMonsters = async (myMonsterGltf, enemyMonsterGltf) => {
     const {
       cameraDistance,
       cameraRotation,
@@ -191,15 +195,17 @@ class Arena3D extends Component {
     this.myMonsterModel = myMonsterGltf
     this.myMonsterObject = this.myMonsterModel.scene
 
-    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
-    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
-
     this.enemyMonsterModel = enemyMonsterGltf
     this.enemyMonsterObject = this.enemyMonsterModel.scene
+
+    // 3D boxes from monsters to get a size from each
+    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
+    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
     const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
     const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
 
+    // monsters average size
     const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
 
     // Grid helper
@@ -245,9 +251,9 @@ class Arena3D extends Component {
     const rotationAngle = cameraRotation * (Math.PI / 180)
 
     const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-    this.baseCameratranslation = new THREE.Matrix4().makeTranslation(
-      0, cameraHeight, cameraDistance
-    )
+    this.baseCameratranslation = new THREE.Matrix4()
+      .makeTranslation(0, cameraHeight, cameraDistance)
+
     const transform = rotationY.multiply(this.baseCameratranslation)
 
     const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
@@ -304,9 +310,7 @@ class Arena3D extends Component {
       // callback not supported for texture loader
       undefined,
       // onError callback
-      function (error) {
-        console.error(error)
-      }
+      console.error.bind(console)
     )
   }
 

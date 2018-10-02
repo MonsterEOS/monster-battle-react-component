@@ -27,11 +27,67 @@ export default type => {
                 vTiles: 7,
                 durationTile: 40
             }
-        default:
+        case AttackType.FIRE:
+            return {
+                src: fire,
+                hTiles: 6,
+                vTiles: 7,
+                durationTile: 40
+            }
+        case AttackType.LIGHT:
+            return {
+                src: light,
+                hTiles: 6,
+                vTiles: 7,
+                durationTile: 40
+            }
+        case AttackType.METAL:
+            return {
+                src: metal,
+                hTiles: 4,
+                vTiles: 5,
+                durationTile: 40
+            }
+        case AttackType.NEUTRAL:
             return {
                 src: neutral,
                 hTiles: 4,
                 vTiles: 5,
+                durationTile: 40
+            }
+        case AttackType.POISON:
+            return {
+                src: poison,
+                hTiles: 6,
+                vTiles: 7,
+                durationTile: 40
+            }
+        case AttackType.UNDEAD:
+            return {
+                src: undead,
+                hTiles: 4,
+                vTiles: 5,
+                durationTile: 40
+            }
+        case AttackType.WATER:
+            return {
+                src: water,
+                hTiles: 6,
+                vTiles: 7,
+                durationTile: 40
+            }
+        case AttackType.WOOD:
+            return {
+                src: wood,
+                hTiles: 4,
+                vTiles: 5,
+                durationTile: 40
+            }
+        default:
+            return {
+                src: neutral,
+                hTiles: 4,
+                vTiles: 4,
                 durationTile: 40
             }
     }
