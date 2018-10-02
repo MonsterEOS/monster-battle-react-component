@@ -17,49 +17,49 @@ export default type => {
                 src: animal,
                 hTiles: 4,
                 vTiles: 4,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.EARTH:
             return {
                 src: earth,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.FIRE:
             return {
                 src: fire,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.LIGHT:
             return {
                 src: light,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.METAL:
             return {
                 src: metal,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.NEUTRAL:
             return {
                 src: neutral,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.POISON:
             return {
                 src: poison,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.UNDEAD:
             return {
@@ -73,13 +73,13 @@ export default type => {
                 src: water,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 40
+                durationTile: 50
             }
         case AttackType.WOOD:
             return {
                 src: wood,
                 hTiles: 4,
-                vTiles: 5,
+                vTiles: 4,
                 durationTile: 40
             }
         default:
@@ -87,7 +87,7 @@ export default type => {
                 src: neutral,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 40
+                durationTile: 50
             }
     }
 }

@@ -291,6 +291,7 @@ class Arena3D extends Component {
 
     const spriteTexture = await textureAssetLoader(attack.src)
 
+    // will animate the sprite sheets
     this.attackFX = new TileTextureAnimator(
       spriteTexture,
       attack.hTiles,
@@ -306,12 +307,26 @@ class Arena3D extends Component {
       transparent: true
     })
 
-    // plane that is always pointing toward the camera
-    const attackFxPlane = new THREE.Sprite(attackFxMaterial)
-    attackFxPlane.scale.set(400, 400, 1.0)
-    attackFxPlane.position.set(0, 150, 0)
+    // return plane that is always pointing toward the camera
+    return new THREE.Sprite(attackFxMaterial)
+  }
 
-    return attackFxPlane
+  playAttackFX = (monsterObject, monsterSize) => {
+    this.getAttackFX(this.currentAttackType, 1)
+      .then(attackFxPlane => {
+        attackFxPlane.scale.set(
+          monsterSize,
+          monsterSize,
+          1.0
+        )
+        attackFxPlane.position.set(
+          monsterObject.position.x,
+          monsterSize * 0.5,
+          monsterObject.position.z
+        )
+        this.scene.add(attackFxPlane)
+        this.attackFXReady = true
+      })
   }
 
   playAttackAnimation = (isMyMonsterAttacking, attackType = AttackType.NEUTRAL) =>
@@ -334,12 +349,6 @@ class Arena3D extends Component {
           resolve()
         }
 
-        this.getAttackFX(attackType, 2)
-          .then(attackFxPlane => {
-            this.scene.add(attackFxPlane)
-            this.attackFXReady = true
-          })
-
         // define to play animations once
         this.myMonsterAction && this.myMonsterAction.stop()
         this.myMonsterAction = this.myMonsterMixer
@@ -352,6 +361,9 @@ class Arena3D extends Component {
           .clipAction(enemyMonsterAnimation)
           .setLoop(THREE.LoopOnce)
           .reset()
+
+        // making the attack type global to reach it in the listener
+        this.currentAttackType = attackType
 
         // define listener to play HitReact animation after the Attack
         isMyMonsterAttacking
@@ -379,11 +391,15 @@ class Arena3D extends Component {
     })
 
   myMonsterAttacking = () => {
+    this.playAttackFX(this.enemyMonsterObject, this.enemyMonsterSize)
+    // play HitReact animation
     this.enemyMonsterAction.play()
     this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
   }
 
   enemyMonsterAttacking = () => {
+    this.playAttackFX(this.myMonsterObject, this.myMonsterSize)
+    // play HitReact animation
     this.myMonsterAction.play()
     this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
   }
