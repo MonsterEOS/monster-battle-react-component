@@ -17,77 +17,88 @@ export default type => {
                 src: animal,
                 hTiles: 4,
                 vTiles: 4,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.5
             }
         case AttackType.EARTH:
             return {
                 src: earth,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.5
             }
         case AttackType.FIRE:
             return {
                 src: fire,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
         case AttackType.LIGHT:
             return {
                 src: light,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.5
             }
         case AttackType.METAL:
             return {
                 src: metal,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
         case AttackType.NEUTRAL:
             return {
                 src: neutral,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
         case AttackType.POISON:
             return {
                 src: poison,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.45
             }
         case AttackType.UNDEAD:
             return {
                 src: undead,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 60
+                durationTile: 60,
+                yPositionFactor: 0.45
             }
         case AttackType.WATER:
             return {
                 src: water,
                 hTiles: 6,
                 vTiles: 7,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
         case AttackType.WOOD:
             return {
                 src: wood,
                 hTiles: 4,
                 vTiles: 4,
-                durationTile: 40
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
         default:
             return {
                 src: neutral,
                 hTiles: 4,
                 vTiles: 5,
-                durationTile: 50
+                durationTile: 60,
+                yPositionFactor: 0.35
             }
     }
 }

@@ -307,13 +307,17 @@ class Arena3D extends Component {
       transparent: true
     })
 
-    // return plane that is always pointing toward the camera
-    return new THREE.Sprite(attackFxMaterial)
+    // return plane that is always pointing toward the camera and
+    // a factor to position the plane on Y
+    return {
+      attackFxPlane: new THREE.Sprite(attackFxMaterial),
+      yPositionFactor: attack.yPositionFactor
+    }
   }
 
   playAttackFX = (monsterObject, monsterSize) => {
     this.getAttackFX(this.currentAttackType, 1)
-      .then(attackFxPlane => {
+      .then(({ attackFxPlane, yPositionFactor }) => {
         attackFxPlane.scale.set(
           monsterSize,
           monsterSize,
@@ -321,7 +325,7 @@ class Arena3D extends Component {
         )
         attackFxPlane.position.set(
           monsterObject.position.x,
-          monsterSize * 0.5,
+          monsterSize * yPositionFactor,
           monsterObject.position.z
         )
         this.scene.add(attackFxPlane)
