@@ -26,7 +26,7 @@ export default type => {
                 hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
-                yPositionFactor: 0.5
+                yPositionFactor: 0.45
             }
         case AttackType.FIRE:
             return {

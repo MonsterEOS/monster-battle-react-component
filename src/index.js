@@ -315,7 +315,7 @@ class Arena3D extends Component {
     }
   }
 
-  playAttackFX = (monsterObject, monsterSize) => {
+  playAttackFX = (monsterObject, monsterSize) =>
     this.getAttackFX(this.currentAttackType, 1)
       .then(({ attackFxPlane, yPositionFactor }) => {
         attackFxPlane.scale.set(
@@ -331,7 +331,6 @@ class Arena3D extends Component {
         this.scene.add(attackFxPlane)
         this.attackFXReady = true
       })
-  }
 
   playAttackAnimation = (isMyMonsterAttacking, attackType = AttackType.NEUTRAL) =>
     new Promise((resolve, reject) => {
@@ -395,10 +394,12 @@ class Arena3D extends Component {
     })
 
   myMonsterAttacking = () => {
+    // play HitReact and fx animations
     this.playAttackFX(this.enemyMonsterObject, this.enemyMonsterSize)
-    // play HitReact animation
-    this.enemyMonsterAction.play()
-    this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
+      .then(() => {
+        this.enemyMonsterAction.play()
+        this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
+      })
   }
 
   enemyMonsterAttacking = () => {
