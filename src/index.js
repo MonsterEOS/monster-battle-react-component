@@ -403,10 +403,12 @@ class Arena3D extends Component {
   }
 
   enemyMonsterAttacking = () => {
+    // play HitReact and fx animations
     this.playAttackFX(this.myMonsterObject, this.myMonsterSize)
-    // play HitReact animation
-    this.myMonsterAction.play()
-    this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
+      .then(() => {
+        this.myMonsterAction.play()
+        this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
+      })
   }
 }
 
