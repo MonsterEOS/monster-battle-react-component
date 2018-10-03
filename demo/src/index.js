@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { AttackType } from '../../src/utils/enums'
-import myMonster from './assets/models/bear.gltf'
-import enemyMonster from './assets/models/butterfly.gltf'
+import myMonster from './assets/models/ness.gltf'
+import enemyMonster from './assets/models/rocky.gltf'
 import Arena3D from '../../src'
 import "./index.css"
 

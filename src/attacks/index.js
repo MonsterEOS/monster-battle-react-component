@@ -15,15 +15,15 @@ export default type => {
         case AttackType.ANIMAL:
             return {
                 src: animal,
-                hTiles: 4,
-                vTiles: 4,
+                hTiles: 5,
+                vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.5
             }
         case AttackType.EARTH:
             return {
                 src: earth,
-                hTiles: 6,
+                hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
                 yPositionFactor: 0.5
@@ -31,7 +31,7 @@ export default type => {
         case AttackType.FIRE:
             return {
                 src: fire,
-                hTiles: 6,
+                hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
                 yPositionFactor: 0.35
@@ -39,15 +39,15 @@ export default type => {
         case AttackType.LIGHT:
             return {
                 src: light,
-                hTiles: 6,
+                hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
-                yPositionFactor: 0.5
+                yPositionFactor: 0.45
             }
         case AttackType.METAL:
             return {
                 src: metal,
-                hTiles: 4,
+                hTiles: 5,
                 vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.35
@@ -55,7 +55,7 @@ export default type => {
         case AttackType.NEUTRAL:
             return {
                 src: neutral,
-                hTiles: 4,
+                hTiles: 5,
                 vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.35
@@ -63,7 +63,7 @@ export default type => {
         case AttackType.POISON:
             return {
                 src: poison,
-                hTiles: 6,
+                hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
                 yPositionFactor: 0.45
@@ -71,7 +71,7 @@ export default type => {
         case AttackType.UNDEAD:
             return {
                 src: undead,
-                hTiles: 4,
+                hTiles: 5,
                 vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.45
@@ -79,7 +79,7 @@ export default type => {
         case AttackType.WATER:
             return {
                 src: water,
-                hTiles: 6,
+                hTiles: 7,
                 vTiles: 7,
                 durationTile: 60,
                 yPositionFactor: 0.35
@@ -87,15 +87,15 @@ export default type => {
         case AttackType.WOOD:
             return {
                 src: wood,
-                hTiles: 4,
-                vTiles: 4,
+                hTiles: 5,
+                vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.35
             }
         default:
             return {
                 src: neutral,
-                hTiles: 4,
+                hTiles: 5,
                 vTiles: 5,
                 durationTile: 60,
                 yPositionFactor: 0.35
