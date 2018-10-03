@@ -1,13 +1,19 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { ActionType } from './utils/enums'
+import { ActionType, AttackType } from './utils/enums'
 import * as THREE from 'three'
-import GLTFLoader from './utils/GLTFLoader'
-import OrbitControls from './utils/OrbitControls'
-import { debounce } from './utils'
+import OrbitControls from './utils/three/OrbitControls'
+import {
+  debounce,
+  applyShader,
+  gltfAssetLoader,
+  textureAssetLoader
+} from './utils'
 import Arena from '../models/Arena.gltf'
 import VertexStudioMaterial from './utils/VextexStudioMaterial'
 import monsterDecors from './utils/decors'
+import TileTextureAnimator from './TileTextureAnimator'
+import attacks from './attacks'
 import "../css/index.css"
 
 class Arena3D extends Component {
@@ -21,14 +27,28 @@ class Arena3D extends Component {
     )
     // used to calculate the delta between frames
     this.prevTime = 0
-    this.myMonsterAttacking = this.myMonsterAttacking.bind(this)
-    this.enemyMonsterAttacking = this.enemyMonsterAttacking.bind(this)
   }
 
-  componentDidMount() {
+  render() {
+    const { size, customStyles } = this.props
+
+    return (
+      <div
+        style={{
+          width: size.width,
+          height: size.height,
+          ...customStyles
+        }}
+        ref={this.setMountNodeRef}
+      />
+    )
+  }
+
+  async componentDidMount() {
     const {
       background,
       myMonster,
+      enemyMonster,
       exposure,
       ambientIntensity,
       ambientColor,
@@ -57,7 +77,7 @@ class Arena3D extends Component {
     this.controls.update()
 
     // add renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true })
     this.renderer.setClearColor(canvasBackground.color, canvasBackground.alpha)
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(width, height)
@@ -82,39 +102,18 @@ class Arena3D extends Component {
     this.camera.add(this.pointLight)
     this.scene.add(this.camera)
 
-    VertexStudioMaterial()
-      .then(VertexStudioMaterial => {
-        this.monsterMaterial = VertexStudioMaterial
+    try {
 
-        // GLTF loader
-        const gltfLoader = new GLTFLoader()
+      // load Arena 3D model
+      const arenaGltf = await gltfAssetLoader(Arena)
+      this.configArena(arenaGltf)
 
-        // loading Arena environment
-        gltfLoader.load(
-          Arena,
-          arenaGltf => {
-            this.arenaModel = arenaGltf
-            this.arenaObject = this.arenaModel.scene
-            this.arenaObject.scale.set(1.5, 1.5, 1.5)
-            this.arenaObject.position.y += -70
-            this.arenaObject.position.z += 400
+      // load monsters 3D models
+      const myMonsterGltf = await gltfAssetLoader(myMonster)
+      const enemyMonsterGltf = await gltfAssetLoader(enemyMonster)
+      this.configMonsters(myMonsterGltf, enemyMonsterGltf)
 
-            this.arenaObject.updateMatrixWorld()
-
-            // loading monsters
-            gltfLoader.load(
-              myMonster,
-              this.loadMonsters,
-              // TODO: add a loader.
-              event => {
-                const percentage = (event.loaded / event.total) * 100
-                console.log(`Loading my monster 3D model... ${Math.round(percentage)}%`)
-              },
-              console.error.bind(console)
-            )
-          }
-        )
-      })
+    } catch (error) { console.error(error) }
 
     // start scene
     this.start()
@@ -137,7 +136,7 @@ class Arena3D extends Component {
 
   start = () => {
     if (!this.frameId) {
-      this.frameId = requestAnimationFrame(this.animate)
+      this.frameId = window.requestAnimationFrame(this.animate)
     }
   }
 
@@ -152,8 +151,14 @@ class Arena3D extends Component {
   animate = (time) => {
     this.frameId = window.requestAnimationFrame(this.animate)
     const delta = (time - this.prevTime) / 1000
+
     this.myMonsterMixer && this.myMonsterMixer.update(delta)
     this.enemyMonsterMixer && this.enemyMonsterMixer.update(delta)
+
+    if (this.attackFXReady) {
+      this.attackFX.update(1000 * delta);
+    }
+
     this.controls.update()
     this.renderScene()
     this.prevTime = time
@@ -170,15 +175,20 @@ class Arena3D extends Component {
     }
   })
 
-  loadMonsters = myGltf => {
-    this.myMonsterModel = myGltf
-    this.myMonsterObject = this.myMonsterModel.scene
+  configArena = gltf => {
+    this.arenaModel = gltf
+    this.arenaObject = this.arenaModel.scene
+    this.arenaObject.scale.set(1.5, 1.5, 1.5)
+    this.arenaObject.position.y += -70
+    this.arenaObject.position.z += 400
 
-    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
-    const myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
+    this.arenaObject.updateMatrixWorld()
 
+    this.scene.add(this.arenaObject)
+  }
+
+  configMonsters = async (myMonsterGltf, enemyMonsterGltf) => {
     const {
-      enemyMonster,
       cameraDistance,
       cameraRotation,
       cameraHeight,
@@ -187,240 +197,218 @@ class Arena3D extends Component {
       enemyDistance
     } = this.props
 
-    // loading enemyMonster with GLTF loader
-    const gltfLoader = new GLTFLoader()
-    gltfLoader.load(
-      enemyMonster,
-      enemyGltf => {
-        this.enemyMonsterModel = enemyGltf
-        this.enemyMonsterObject = this.enemyMonsterModel.scene
+    this.myMonsterModel = myMonsterGltf
+    this.myMonsterObject = this.myMonsterModel.scene
 
-        const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
-        const enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
+    this.enemyMonsterModel = enemyMonsterGltf
+    this.enemyMonsterObject = this.enemyMonsterModel.scene
 
-        const avgMonstersSize = (myMonsterSize + enemyMonsterSize) / 2
+    // 3D boxes from monsters to get a size from each
+    const myMonsterBox = new THREE.Box3().setFromObject(this.myMonsterObject)
+    this.myMonsterSize = myMonsterBox.getSize(new THREE.Vector3()).length()
 
-        // Grid helper
-        enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
+    const enemyMonsterBox = new THREE.Box3().setFromObject(this.enemyMonsterObject)
+    this.enemyMonsterSize = enemyMonsterBox.getSize(new THREE.Vector3()).length()
 
-        // clipping planes
-        this.camera.near = 1500
-        this.camera.far = avgMonstersSize * 100
+    // monsters average size
+    const avgMonstersSize = (this.myMonsterSize + this.enemyMonsterSize) / 2
 
-        // distance my enemy monster from my monster
-        this.enemyMonsterObject.position.z += enemyDistance
+    // Grid helper
+    enableGrid && this.scene.add(new THREE.GridHelper(avgMonstersSize * 8, 10))
 
-        // rotate in Y enemy monster by 180º
-        this.enemyMonsterObject.rotation.y = Math.PI
+    // clipping planes
+    this.camera.near = 1450
+    this.camera.far = avgMonstersSize * 100
 
-        // updates global transform of the monsters
-        this.myMonsterObject.updateMatrixWorld()
-        this.enemyMonsterObject.updateMatrixWorld()
+    // distance of enemy monster from my monster
+    this.enemyMonsterObject.position.z += enemyDistance
 
-        // applying shaders to both monsters
-        this.myMonsterObject.traverse(child => {
-          if (child.isMesh) {
-            if (child.material[0]) {
-              child.material.forEach((material, idx) => {
-                if (material.map) {
-                  child.material[idx] = this.monsterMaterial(
-                    material.map,
-                    this.props.myMonsterDecor
-                  )
-                }
-              })
-            }
-            else {
-              if (child.material.map) {
-                child.material = this.monsterMaterial(
-                  child.material.map,
-                  this.props.myMonsterDecor
-                )
-              }
-            }
-          }
-        })
+    // rotate in Y enemy monster by 180º
+    this.enemyMonsterObject.rotation.y = Math.PI
 
-        this.enemyMonsterObject.traverse(child => {
-          if (child.isMesh) {
-            if (child.material[0]) {
-              child.material.forEach((material, idx) => {
-                if (material.map) {
-                  child.material[idx] = this.monsterMaterial(
-                    material.map,
-                    this.props.enemyMonsterDecor
-                  )
-                }
-              })
-            }
-            else {
-              if (child.material.map) {
-                child.material = this.monsterMaterial(
-                  child.material.map,
-                  this.props.enemyMonsterDecor
-                )
-              }
-            }
-          }
-        })
+    // updates global transform of the monsters
+    this.myMonsterObject.updateMatrixWorld()
+    this.enemyMonsterObject.updateMatrixWorld()
 
-        // applying shaders to coliseum
-        if (this.props.coliseumDecor) {
-          this.arenaObject.traverse(child => {
-            if (child.isMesh) {
-              if (child.material[0]) {
-                child.material.forEach((material, idx) => {
-                  if (material.map) {
-                    child.material[idx] = this.monsterMaterial(
-                      material.map,
-                      this.props.coliseumDecor
-                    )
-                  }
-                })
-              }
-              else {
-                if (child.material.map) {
-                  child.material = this.monsterMaterial(
-                    child.material.map,
-                    this.props.coliseumDecor
-                  )
-                }
-              }
-            }
-          })
+    // loading VertexStudioMaterial
+    const vertexStudioMaterial = await VertexStudioMaterial()
+
+    // applying shaders to both monsters
+    applyShader(this.myMonsterObject, vertexStudioMaterial, this.props.myMonsterDecor)
+    applyShader(this.enemyMonsterObject, vertexStudioMaterial, this.props.enemyMonsterDecor)
+
+    // applying shaders to coliseum
+    if (this.props.coliseumDecor) {
+      applyShader(this.arenaObject, vertexStudioMaterial, this.props.coliseumDecor)
+    }
+
+    // add to scene
+    this.scene.add(this.myMonsterObject)
+    this.scene.add(this.enemyMonsterObject)
+
+    // define animation mixers
+    this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
+    this.enemyMonsterMixer = new THREE.AnimationMixer(this.enemyMonsterObject)
+
+    // set camera initial position
+
+    const rotationAngle = cameraRotation * (Math.PI / 180)
+
+    const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
+    const baseCameratranslation = new THREE.Matrix4()
+      .makeTranslation(0, cameraHeight, cameraDistance)
+
+    const transform = rotationY.multiply(baseCameratranslation)
+
+    const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
+
+    const finalTransform = rotationX.multiply(transform)
+
+    // apply the matrix of transformations
+    this.camera.applyMatrix(finalTransform)
+
+    // update camera parameters
+    this.camera.updateProjectionMatrix()
+
+    // start idle animations
+    this.myMonsterMixer
+      .clipAction(THREE.AnimationClip.findByName(
+        this.myMonsterModel.animations,
+        ActionType.IDLE
+      ))
+      .play()
+
+    this.enemyMonsterMixer
+      .clipAction(THREE.AnimationClip.findByName(
+        this.enemyMonsterModel.animations,
+        ActionType.IDLE
+      ))
+      .play()
+  }
+
+  getAttackFX = async (attackType, repetitions) => {
+    const attack = attacks(attackType)
+
+    const spriteTexture = await textureAssetLoader(attack.src)
+
+    // will animate the sprite sheets
+    this.attackFX = new TileTextureAnimator(
+      spriteTexture,
+      attack.hTiles,
+      attack.vTiles,
+      attack.durationTile,
+      repetitions
+    )
+
+    // material with the loaded texture
+    const attackFxMaterial = new THREE.SpriteMaterial({
+      map: spriteTexture,
+      side: THREE.DoubleSide,
+      transparent: true
+    })
+
+    // return plane that is always pointing toward the camera and
+    // a factor to position the plane on Y
+    return {
+      attackFxPlane: new THREE.Sprite(attackFxMaterial),
+      yPositionFactor: attack.yPositionFactor
+    }
+  }
+
+  playAttackFX = (monsterObject, monsterSize) =>
+    this.getAttackFX(this.currentAttackType, 1)
+      .then(({ attackFxPlane, yPositionFactor }) => {
+        attackFxPlane.scale.set(
+          monsterSize,
+          monsterSize,
+          1.0
+        )
+        attackFxPlane.position.set(
+          monsterObject.position.x,
+          monsterSize * yPositionFactor,
+          monsterObject.position.z
+        )
+        this.scene.add(attackFxPlane)
+        this.attackFXReady = true
+      })
+
+  playAttackAnimation = (isMyMonsterAttacking, attackType = AttackType.NEUTRAL) =>
+    new Promise((resolve, reject) => {
+      try {
+        // define animation clip to be played for each monster
+        const myMonsterAnimation = THREE.AnimationClip.findByName(
+          this.myMonsterModel.animations,
+          isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
+        )
+
+        const enemyMonsterAnimation = THREE.AnimationClip.findByName(
+          this.enemyMonsterModel.animations,
+          isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
+        )
+
+        // if any of the monsters lacks Attack or HitReact animation,
+        // resolve inmediatly, leaving them at Idle state only.
+        if (!myMonsterAnimation || !enemyMonsterAnimation) {
+          resolve()
         }
 
-        // add to scene
-        this.scene.add(this.myMonsterObject)
-        this.scene.add(this.enemyMonsterObject)
-        this.scene.add(this.arenaObject)
+        // define to play animations once
+        this.myMonsterAction && this.myMonsterAction.stop()
+        this.myMonsterAction = this.myMonsterMixer
+          .clipAction(myMonsterAnimation)
+          .setLoop(THREE.LoopOnce)
+          .reset()
 
-        // define animation mixers
-        this.myMonsterMixer = new THREE.AnimationMixer(this.myMonsterObject)
-        this.enemyMonsterMixer = new THREE.AnimationMixer(this.enemyMonsterObject)
+        this.enemyMonsterAction && this.enemyMonsterAction.stop()
+        this.enemyMonsterAction = this.enemyMonsterMixer
+          .clipAction(enemyMonsterAnimation)
+          .setLoop(THREE.LoopOnce)
+          .reset()
 
-        // set camera initial position
+        // making the attack type global to reach it in the listener
+        this.currentAttackType = attackType
 
-        const rotationAngle = cameraRotation * (Math.PI / 180)
+        // define listener to play HitReact animation after the Attack
+        isMyMonsterAttacking
+          ? this.myMonsterMixer.addEventListener(
+            "finished",
+            this.myMonsterAttacking
+          )
+          : this.enemyMonsterMixer.addEventListener(
+            "finished",
+            this.enemyMonsterAttacking
+          )
 
-        const rotationY = new THREE.Matrix4().makeRotationY(rotationAngle)
-        this.baseCameratranslation = new THREE.Matrix4().makeTranslation(
-          0, cameraHeight, cameraDistance
-        )
-        const transform = rotationY.multiply(this.baseCameratranslation)
+        // play Attack animation
+        isMyMonsterAttacking
+          ? this.myMonsterAction.play()
+          : this.enemyMonsterAction.play()
 
-        const rotationX = new THREE.Matrix4().makeRotationX(cameraHighAngle * Math.PI / 180)
-
-        const finalTransform = rotationX.multiply(transform)
-
-        // Apply the matrix of transformations
-        this.camera.applyMatrix(finalTransform)
-
-        // update camera parameters
-        this.camera.updateProjectionMatrix()
-
-        // start idle animations
-        this.myMonsterMixer
-          .clipAction(THREE.AnimationClip.findByName(
-            this.myMonsterModel.animations,
-            ActionType.IDLE
-          ))
-          .play()
-
-        this.enemyMonsterMixer
-          .clipAction(THREE.AnimationClip.findByName(
-            this.enemyMonsterModel.animations,
-            ActionType.IDLE
-          ))
-          .play()
-      },
-      // TODO: add a loader.
-      event => {
-        const percentage = (event.loaded / event.total) * 100
-        console.log(`Loading my enemy monster 3D model... ${Math.round(percentage)}%`)
-      },
-      console.error.bind(console)
-    )
-  }
-
-  changeAnimationState = (isMyMonsterAttacking) => new Promise((resolve, reject) => {
-    try {
-      // define animation clip to play for each monster
-      const myMonsterAnimation = THREE.AnimationClip.findByName(
-        this.myMonsterModel.animations,
-        isMyMonsterAttacking ? ActionType.ATTACK : ActionType.HIT_REACT
-      )
-
-      const enemyMonsterAnimation = THREE.AnimationClip.findByName(
-        this.enemyMonsterModel.animations,
-        isMyMonsterAttacking ? ActionType.HIT_REACT : ActionType.ATTACK
-      )
-
-      if (!myMonsterAnimation || !enemyMonsterAnimation) {
-        resolve()
+        // defining listener to resolve promise
+        isMyMonsterAttacking
+          ? this.enemyMonsterMixer.addEventListener("finished", resolve)
+          : this.myMonsterMixer.addEventListener("finished", resolve)
+      } catch (error) {
+        reject(error)
       }
+    })
 
-      // define to play animation once
-      this.myMonsterAction && this.myMonsterAction.stop()
-      this.myMonsterAction = this.myMonsterMixer
-        .clipAction(myMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-
-      this.enemyMonsterAction && this.enemyMonsterAction.stop()
-      this.enemyMonsterAction = this.enemyMonsterMixer
-        .clipAction(enemyMonsterAnimation)
-        .setLoop(THREE.LoopOnce)
-        .reset()
-
-      // define listener to play HitReact animation after the Attack
-      isMyMonsterAttacking
-        ? this.myMonsterMixer.addEventListener(
-          "finished",
-          this.myMonsterAttacking
-        )
-        : this.enemyMonsterMixer.addEventListener(
-          "finished",
-          this.enemyMonsterAttacking
-        )
-
-      // play Attack animation
-      isMyMonsterAttacking
-        ? this.myMonsterAction.play()
-        : this.enemyMonsterAction.play()
-
-      // defining listener to resolve promise
-      isMyMonsterAttacking
-        ? this.enemyMonsterMixer.addEventListener("finished", resolve)
-        : this.myMonsterMixer.addEventListener("finished", resolve)
-    } catch (error) {
-      reject(error)
-    }
-  })
-
-  myMonsterAttacking() {
-    this.enemyMonsterAction.play()
-    this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
+  myMonsterAttacking = () => {
+    // play HitReact and fx animations
+    this.playAttackFX(this.enemyMonsterObject, this.enemyMonsterSize)
+      .then(() => {
+        this.enemyMonsterAction.play()
+        this.myMonsterMixer.removeEventListener("finished", this.myMonsterAttacking)
+      })
   }
 
-  enemyMonsterAttacking() {
-    this.myMonsterAction.play()
-    this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
-  }
-
-  render() {
-    const { size, customStyles } = this.props
-
-    return (
-      <div
-        style={{
-          width: size.width,
-          height: size.height,
-          ...customStyles
-        }}
-        ref={this.setMountNodeRef}
-      />
-    )
+  enemyMonsterAttacking = () => {
+    // play HitReact and fx animations
+    this.playAttackFX(this.myMonsterObject, this.myMonsterSize)
+      .then(() => {
+        this.myMonsterAction.play()
+        this.enemyMonsterMixer.removeEventListener("finished", this.enemyMonsterAttacking)
+      })
   }
 }
 
