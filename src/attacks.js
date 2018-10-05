@@ -1,14 +1,14 @@
-import { AttackType } from '../utils/enums'
-import animal from '../attacks/sprites/animal.png'
-import earth from '../attacks/sprites/earth.png'
-import fire from '../attacks/sprites/fire.png'
-import light from '../attacks/sprites/light.png'
-import metal from '../attacks/sprites/metal.png'
-import neutral from '../attacks/sprites/neutral.png'
-import poison from '../attacks/sprites/poison.png'
-import undead from '../attacks/sprites/undead.png'
-import water from '../attacks/sprites/water.png'
-import wood from '../attacks/sprites/wood.png'
+import { AttackType } from './utils/enums'
+import animal from '../attacks/animal.png'
+import earth from '../attacks/earth.png'
+import fire from '../attacks/fire.png'
+import light from '../attacks/light.png'
+import metal from '../attacks/metal.png'
+import neutral from '../attacks/neutral.png'
+import poison from '../attacks/poison.png'
+import undead from '../attacks/undead.png'
+import water from '../attacks/water.png'
+import wood from '../attacks/wood.png'
 
 export default type => {
     switch (type) {
@@ -18,7 +18,7 @@ export default type => {
                 hTiles: 5,
                 vTiles: 5,
                 durationTile: 60,
-                yPositionFactor: 0.5
+                yPositionFactor: 0.35
             }
         case AttackType.EARTH:
             return {
